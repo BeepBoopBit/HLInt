@@ -88,6 +88,7 @@ public:
             return output(line_token, 0) ? std::cout << "Success in Output" << std::endl, true : false;;
         }
         else{
+            std::cout << "Error in Syntax Analyzer" << std::endl;
             return false;
         }
     }
