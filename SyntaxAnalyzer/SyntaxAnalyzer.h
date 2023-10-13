@@ -82,7 +82,7 @@ public:
             return oneWayIfCondition(line_token, 0) ? std::cout << "Success in If" << std::endl, true : false;;
         }
         else if(line_token[0] == LanguageDictionary::NumberToken || isOperator(line_token[0])){
-            return mathematicalExpression(line_token, 0) ? std::cout << "Success in Assignment" << std::endl, true : false;;
+            return mathematicalExpression(line_token, 0) ? std::cout << "Success in MathematicalExpression" << std::endl, true : false;;
         }
         else if(line_token[0] == LanguageDictionary::OutputToken){
             return output(line_token, 0) ? std::cout << "Success in Output" << std::endl, true : false;;
@@ -161,23 +161,23 @@ private:
     bool assignment(std::vector<LanguageToken> &line_token, int position){
         // Position at AssignmentToken
         try{
-             // Check of Parenthesis
-            parenthesisBalancer(line_token[position+1]);
+            // Check of Parenthesis
+            parenthesisBalancer(line_token[position++]);
 
-            if(line_token[position+1] == LanguageToken::IdentifierToken || line_token[position+1] == LanguageToken::LiteralToken){
-                if(line_token[position+2] == LanguageToken::EndOfStatementToken){
+            if(isIdentifierOrLiteral(line_token[position++])){
+                if(line_token[position++] == LanguageToken::EndOfStatementToken){
                     // Check if Parenthesis is balanced
                     if (parenthesis_count != 0){
                         return false;
                     }
-
+                    std::cout << "Success in Assignment" << std::endl;
                     return true;
                 }
                 else{
-                    if (isOperator(line_token[position+2])){
+                    if (isOperator(line_token[--position])){
 
                         // Position given at Operator
-                        return assignment(line_token, position+2);
+                        return assignment(line_token, position);
                     }
                     else{
                         return false;
