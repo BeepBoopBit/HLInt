@@ -110,6 +110,9 @@ public:
 
         // Store the character that will be read
         char c = ' ';
+
+        // flags
+        bool isDigit = false;
         
         // While the file is open
         while(this->file.is_open()){
@@ -135,17 +138,28 @@ public:
                     continue;
                 }
 
-                // Literal ( Doesn't support yet)
-                /**
-                 *
-                 * if ((tokeType == this->isLiteral(c)) != LanguageToken::InvalidToken){
-                 *    line_token.push_back(tokenType);
-                 * }
-                **/
+                // Number
+                if((tokenType = this->isDigit(c)) != LanguageToken::InvalidToken){
+                    // It's a possibility that an identifier ends with a number.
 
+                    // If the token_value contains something
+                    if (token_value != ""){
+                        // Then it's probably an identifier with a number at the end.
+                        // Add the character to the token_value
+                        token_value += c;
+
+                        // If isDigit flag is on, then it's probably a digit
+                    }
+                    
+                    // Otherwise, it's a literal number
+                    else{
+                        token_value += c;
+                        isDigit = true;
+                    }
+                }
 
                 // Operator
-                if((tokenType = this->isOperator(c)) != LanguageToken::InvalidToken){
+                else if((tokenType = this->isOperator(c)) != LanguageToken::InvalidToken){
                     
                     // If it's an operator, this would mean that whatever is on the LHS can be an identifier or a keyword.
                     
@@ -159,9 +173,14 @@ public:
                             line_token.push_back(temp_tokenType);
                         }
                         
-                        // Otherwise, it's an identifier
+                        // Otherwise, it's an identifier or a digit.
                         else{
-                            line_token.push_back(LanguageToken::IdentifierToken);
+                            if(isDigit){
+                                isDigit = false;
+                                line_token.push_back(LanguageToken::NumberToken);
+                            }else{
+                                line_token.push_back(LanguageToken::IdentifierToken);
+                            }
 
                             char next = file.peek();
                             if(next == '<' && c == '<'){
@@ -184,26 +203,11 @@ public:
 
                 // Identifier
                 else if((tokenType = this->isAlphabet(c)) != LanguageToken::InvalidToken){
+                    if (isDigit){
+                        std::cout << "ERROR: You can't start an identifier with a number";
+                    }
                     // Add the character to the token_value
                     token_value += c;
-                }
-
-                // Number
-                else if((tokenType = this->isDigit(c)) != LanguageToken::InvalidToken){
-
-                    // It's a possibility that an identifier ends with a number.
-
-                    // If the token_value contains something
-                    if (token_value != ""){
-                        // Then it's probably an identifier with a number at the end.
-                        // Add the character to the token_value
-                        token_value += c;
-                    }
-                    
-                    // Otherwise, it's a literal number
-                    else{
-                        line_token.push_back(tokenType);
-                    }
                 }
 
                 else if(c == ' '){
