@@ -17,6 +17,7 @@ private:
         CharacterToken,
         IdentifierToken,
         NumberToken,
+        StringToken,
         WhiteSpaceToken,
         PlusToken,
         MinusToken,
@@ -173,8 +174,9 @@ public:
                             line_token.push_back(temp_tokenType);
                         }
                         
-                        // Otherwise, it's an identifier or a digit.
+                        // Otherwise, it's an identifier or a digit or a literal.
                         else{
+                            
                             if(isDigit){
                                 isDigit = false;
                                 line_token.push_back(LanguageToken::NumberToken);
@@ -196,6 +198,23 @@ public:
                     // If it's empty, then it's an operator.
                     // NOTE: Possible Error Handling. If it's not the EndOfStatementToken then it's probably an error.
                     else{
+                        
+                        // If it's quoteToken, then we'll go through all the file until we see an equivalent token
+                        if(tokenType == LanguageToken::QuoteToken){
+                            line_token.push_back(tokenType);
+                            std::string tempValue = "";
+                            char next = ' ';
+                            file.get(next);
+                            while(this->isOperator(next) != LanguageToken::QuoteToken){
+                                tempValue += next;
+                                if(file.eof()){
+                                    std::cout << "ERROR: Missing Quote Equivalent" << std::endl;
+                                    return;
+                                }
+                                file.get(next);
+                            }
+                            line_token.push_back(LanguageToken::StringToken);
+                        }
                         line_token.push_back(tokenType);
                     }
                     token_value = "";
@@ -232,7 +251,7 @@ public:
                 }else if (line_token[i] == LanguageToken::IdentifierToken){
                     std::cout << "Identifier" << std::endl;
                 }else if (line_token[i] == LanguageToken::NumberToken){
-                    std::cout << "Number" << std::endl;
+                    std::cout << "NumberToken" << std::endl;
                 }else if (line_token[i] == LanguageToken::WhiteSpaceToken){
                     std::cout << "WhiteSpace" << std::endl;
                 }else if (line_token[i] == LanguageToken::PlusToken){
@@ -265,6 +284,8 @@ public:
                     std::cout << "CloseParenthesis" << std::endl;
                 }else if (line_token[i] == LanguageToken::LiteralToken){
                     std::cout << "Literal" << std::endl;
+                }else if(line_token[i] == LanguageToken::StringToken){
+                    std::cout << "StringToken" << std::endl;
                 }
             }
         }

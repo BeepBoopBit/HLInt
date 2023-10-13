@@ -3,3 +3,6 @@ xyz:double;
 
 if (xyz < 10)
     output << xyz;
+
+if (xyz < "watermelon ; + , watermelon ")
+    output << xyz;
