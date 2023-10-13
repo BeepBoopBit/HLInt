@@ -30,6 +30,8 @@ private:
         LeftShiftToken,
         LessThanToken,
         GreaterThanToken,
+        EqualityToken,
+        NotEqualToken,
         IfToken,
         OpenParenthesisToken,
         CloseParenthesisToken,
@@ -185,8 +187,18 @@ public:
                             }
 
                             char next = file.peek();
-                            if(next == '<' && c == '<'){
+                            if(c == '<' && next == '<'){
                                 tokenType = LanguageToken::LeftShiftToken;
+
+                                // Consume the next file
+                                file.get(next);
+                            }else if(c == '!' && next  == '='){
+                                tokenType = LanguageToken::NotEqualToken;
+
+                                // Consume the next file
+                                file.get(next);
+                            }else if(c == '=' && next == '='){
+                                tokenType = LanguageToken::EqualityToken;
 
                                 // Consume the next file
                                 file.get(next);
@@ -286,6 +298,14 @@ public:
                     std::cout << "Literal" << std::endl;
                 }else if(line_token[i] == LanguageToken::StringToken){
                     std::cout << "StringToken" << std::endl;
+                }else if(line_token[i] == LanguageToken::EqualityToken){
+                    std::cout << "EqualityToken" << std::endl;
+                }else if(line_token[i] == LanguageToken::NotEqualToken){
+                    std::cout << "NotEqualToken" << std::endl;
+                }else if(line_token[i] == LanguageToken::TypeIntegerToken){
+                    std::cout << "TypeIntegerToken" << std::endl;
+                }else if(line_token[i] == LanguageToken::TypeFloatToken){
+                    std::cout << "TypeFloatToken" <<std::endl;
                 }
             }
         }
@@ -398,7 +418,8 @@ private:
         {'<', LanguageToken::LessThanToken},
         {'>', LanguageToken::GreaterThanToken},
         {'(', LanguageToken::OpenParenthesisToken},
-        {')', LanguageToken::CloseParenthesisToken}
+        {')', LanguageToken::CloseParenthesisToken},
+        {'!', LanguageToken::NotEqualToken}
     };
     
     // Check if the character is a valid operator
@@ -409,7 +430,7 @@ private:
     std::map<std::string, LanguageToken> LanguageKeywords ={
         {"if", LanguageToken::IfToken},
         {"integer", LanguageToken::TypeIntegerToken},
-        {"float", LanguageToken::TypeFloatToken}
+        {"double", LanguageToken::TypeFloatToken}
     };
 
     // Check if the character is a valid keyword
