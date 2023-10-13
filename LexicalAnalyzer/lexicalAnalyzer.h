@@ -8,37 +8,18 @@
 
 // Created Classes
 #include "../SymbolTable/symbolTable.h"
+#include "../SyntaxAnalyzer/SyntaxAnalyzer.h"
 
 class LexicalAnalyzer{
 
 private:
-    // Tokens of the Language
-    enum LanguageToken{
-        CharacterToken,
-        IdentifierToken,
-        NumberToken,
-        StringToken,
-        WhiteSpaceToken,
-        PlusToken,
-        MinusToken,
-        EndLineToken,
-        AssignmentToken,
-        EndOfStatementToken,
-        ColonToken,
-        InvalidToken,
-        QuoteToken,
-        LeftShiftToken,
-        LessThanToken,
-        GreaterThanToken,
-        EqualityToken,
-        NotEqualToken,
-        IfToken,
-        OpenParenthesisToken,
-        CloseParenthesisToken,
-        LiteralToken,
-        TypeIntegerToken,
-        TypeFloatToken
-    };
+    SyntaxAnalyzer* syntaxAnalyzer;
+    LanguageDictionary* languageDictionary;
+
+
+private:
+    
+    using LanguageToken = LanguageDictionary::LanguageToken;
 
 // Other Variables
 private:
@@ -94,6 +75,12 @@ public:
 
         // Initialize the symbol table
         //this->symbolTable = new SymbolTable();
+
+        // Initialize the language dictionary
+        this->languageDictionary = new LanguageDictionary();
+
+        // Initialize the syntax analyzer
+        this->syntaxAnalyzer = new SyntaxAnalyzer();
 
         // Open the file
         this->file.open(filename);
@@ -163,7 +150,6 @@ public:
 
                 // Operator
                 else if((tokenType = this->isOperator(c)) != LanguageToken::InvalidToken){
-                    
                     // If it's an operator, this would mean that whatever is on the LHS can be an identifier or a keyword.
                     
                     // Check if the token_value contains something
@@ -173,7 +159,16 @@ public:
 
                         // If it's a keyword.
                         if (temp_tokenType != LanguageToken::InvalidToken){
-                            line_token.push_back(temp_tokenType);
+                            if(temp_tokenType == LanguageToken::OutputToken){
+                                char next = file.peek();
+                                if(c == '<' && next == '<'){
+                                    tokenType = LanguageToken::LeftShiftToken;
+
+                                    // Consume the next file
+                                    file.get(next);
+                                }
+                            }
+                           line_token.push_back(temp_tokenType);
                         }
                         
                         // Otherwise, it's an identifier or a digit or a literal.
@@ -204,7 +199,13 @@ public:
                                 file.get(next);
                             }
                         }
-                        line_token.push_back(tokenType);
+                        if(tokenType == LanguageToken::EndOfStatementToken){
+                            line_token.push_back(tokenType);
+                            this->syntaxAnalyzer->analyze(line_token);
+                            line_token.clear();
+                        }else{
+                            line_token.push_back(tokenType);
+                        }
                     }
                     
                     // If it's empty, then it's an operator.
@@ -213,7 +214,7 @@ public:
                         
                         // If it's quoteToken, then we'll go through all the file until we see an equivalent token
                         if(tokenType == LanguageToken::QuoteToken){
-                            line_token.push_back(tokenType);
+                            //line_token.push_back(tokenType);
                             std::string tempValue = "";
                             char next = ' ';
                             file.get(next);
@@ -227,7 +228,7 @@ public:
                             }
                             line_token.push_back(LanguageToken::StringToken);
                         }
-                        line_token.push_back(tokenType);
+                        //line_token.push_back(tokenType);
                     }
                     token_value = "";
                 }
@@ -430,7 +431,8 @@ private:
     std::map<std::string, LanguageToken> LanguageKeywords ={
         {"if", LanguageToken::IfToken},
         {"integer", LanguageToken::TypeIntegerToken},
-        {"double", LanguageToken::TypeFloatToken}
+        {"double", LanguageToken::TypeFloatToken},
+        {"output", LanguageToken::OutputToken}
     };
 
     // Check if the character is a valid keyword
