@@ -129,6 +129,9 @@ public:
                 
                 // Enesure that the end of line is ignored. (In the language it isn't relevant)
                 if(c == '\n'){
+                    this->column = 0;
+                    this->line += 1;
+                    token_value = "";
                     continue;
                 }
 
@@ -148,22 +151,27 @@ public:
                     
                     // Check if the token_value contains something
                     if (token_value != ""){
+                        
+                        LanguageToken temp_tokenType = this->isKeyword(token_value);
 
                         // If it's a keyword.
-                        if ((this->isKeyword(token_value)) != LanguageToken::InvalidToken){
-                            // Push it as a keyword
-                            line_token.push_back(tokenType);
-
-                            // And reset the token_value
-                            token_value = "";
+                        if (temp_tokenType != LanguageToken::InvalidToken){
+                            line_token.push_back(temp_tokenType);
                         }
                         
                         // Otherwise, it's an identifier
                         else{
                             line_token.push_back(LanguageToken::IdentifierToken);
-                            token_value = "";
-                            line_token.push_back(tokenType);
+
+                            char next = file.peek();
+                            if(next == '<' && c == '<'){
+                                tokenType = LanguageToken::LeftShiftToken;
+
+                                // Consume the next file
+                                file.get(next);
+                            }
                         }
+                        line_token.push_back(tokenType);
                     }
                     
                     // If it's empty, then it's an operator.
@@ -171,6 +179,7 @@ public:
                     else{
                         line_token.push_back(tokenType);
                     }
+                    token_value = "";
                 }
 
                 // Identifier
@@ -195,6 +204,10 @@ public:
                     else{
                         line_token.push_back(tokenType);
                     }
+                }
+
+                else if(c == ' '){
+                    // Do nothing if it's a space
                 }
                 
                 // Either it's not supported yet, or it's an invalid token.

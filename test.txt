@@ -1,2 +1,5 @@
 xyz:integer;
 xyz:double;
+
+if (xyz < 10)
+    output << xyz;
