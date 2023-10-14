@@ -17,6 +17,7 @@ private:
         CharacterToken,
         IdentifierToken,
         NumberToken,
+        StringToken,
         WhiteSpaceToken,
         PlusToken,
         MinusToken,
@@ -29,6 +30,8 @@ private:
         LeftShiftToken,
         LessThanToken,
         GreaterThanToken,
+        EqualityToken,
+        NotEqualToken,
         IfToken,
         OpenParenthesisToken,
         CloseParenthesisToken,
@@ -110,6 +113,9 @@ public:
 
         // Store the character that will be read
         char c = ' ';
+
+        // flags
+        bool isDigit = false;
         
         // While the file is open
         while(this->file.is_open()){
@@ -129,59 +135,14 @@ public:
                 
                 // Enesure that the end of line is ignored. (In the language it isn't relevant)
                 if(c == '\n'){
+                    this->column = 0;
+                    this->line += 1;
+                    token_value = "";
                     continue;
                 }
 
-                // Literal ( Doesn't support yet)
-                /**
-                 *
-                 * if ((tokeType == this->isLiteral(c)) != LanguageToken::InvalidToken){
-                 *    line_token.push_back(tokenType);
-                 * }
-                **/
-
-
-                // Operator
-                if((tokenType = this->isOperator(c)) != LanguageToken::InvalidToken){
-                    
-                    // If it's an operator, this would mean that whatever is on the LHS can be an identifier or a keyword.
-                    
-                    // Check if the token_value contains something
-                    if (token_value != ""){
-
-                        // If it's a keyword.
-                        if ((this->isKeyword(token_value)) != LanguageToken::InvalidToken){
-                            // Push it as a keyword
-                            line_token.push_back(tokenType);
-
-                            // And reset the token_value
-                            token_value = "";
-                        }
-                        
-                        // Otherwise, it's an identifier
-                        else{
-                            line_token.push_back(LanguageToken::IdentifierToken);
-                            token_value = "";
-                            line_token.push_back(tokenType);
-                        }
-                    }
-                    
-                    // If it's empty, then it's an operator.
-                    // NOTE: Possible Error Handling. If it's not the EndOfStatementToken then it's probably an error.
-                    else{
-                        line_token.push_back(tokenType);
-                    }
-                }
-
-                // Identifier
-                else if((tokenType = this->isAlphabet(c)) != LanguageToken::InvalidToken){
-                    // Add the character to the token_value
-                    token_value += c;
-                }
-
                 // Number
-                else if((tokenType = this->isDigit(c)) != LanguageToken::InvalidToken){
-
+                if((tokenType = this->isDigit(c)) != LanguageToken::InvalidToken){
                     // It's a possibility that an identifier ends with a number.
 
                     // If the token_value contains something
@@ -189,12 +150,99 @@ public:
                         // Then it's probably an identifier with a number at the end.
                         // Add the character to the token_value
                         token_value += c;
+
+                        // If isDigit flag is on, then it's probably a digit
                     }
                     
                     // Otherwise, it's a literal number
                     else{
+                        token_value += c;
+                        isDigit = true;
+                    }
+                }
+
+                // Operator
+                else if((tokenType = this->isOperator(c)) != LanguageToken::InvalidToken){
+                    
+                    // If it's an operator, this would mean that whatever is on the LHS can be an identifier or a keyword.
+                    
+                    // Check if the token_value contains something
+                    if (token_value != ""){
+                        
+                        LanguageToken temp_tokenType = this->isKeyword(token_value);
+
+                        // If it's a keyword.
+                        if (temp_tokenType != LanguageToken::InvalidToken){
+                            line_token.push_back(temp_tokenType);
+                        }
+                        
+                        // Otherwise, it's an identifier or a digit or a literal.
+                        else{
+                            
+                            if(isDigit){
+                                isDigit = false;
+                                line_token.push_back(LanguageToken::NumberToken);
+                            }else{
+                                line_token.push_back(LanguageToken::IdentifierToken);
+                            }
+
+                            char next = file.peek();
+                            if(c == '<' && next == '<'){
+                                tokenType = LanguageToken::LeftShiftToken;
+
+                                // Consume the next file
+                                file.get(next);
+                            }else if(c == '!' && next  == '='){
+                                tokenType = LanguageToken::NotEqualToken;
+
+                                // Consume the next file
+                                file.get(next);
+                            }else if(c == '=' && next == '='){
+                                tokenType = LanguageToken::EqualityToken;
+
+                                // Consume the next file
+                                file.get(next);
+                            }
+                        }
                         line_token.push_back(tokenType);
                     }
+                    
+                    // If it's empty, then it's an operator.
+                    // NOTE: Possible Error Handling. If it's not the EndOfStatementToken then it's probably an error.
+                    else{
+                        
+                        // If it's quoteToken, then we'll go through all the file until we see an equivalent token
+                        if(tokenType == LanguageToken::QuoteToken){
+                            line_token.push_back(tokenType);
+                            std::string tempValue = "";
+                            char next = ' ';
+                            file.get(next);
+                            while(this->isOperator(next) != LanguageToken::QuoteToken){
+                                tempValue += next;
+                                if(file.eof()){
+                                    std::cout << "ERROR: Missing Quote Equivalent" << std::endl;
+                                    return;
+                                }
+                                file.get(next);
+                            }
+                            line_token.push_back(LanguageToken::StringToken);
+                        }
+                        line_token.push_back(tokenType);
+                    }
+                    token_value = "";
+                }
+
+                // Identifier
+                else if((tokenType = this->isAlphabet(c)) != LanguageToken::InvalidToken){
+                    if (isDigit){
+                        std::cout << "ERROR: You can't start an identifier with a number";
+                    }
+                    // Add the character to the token_value
+                    token_value += c;
+                }
+
+                else if(c == ' '){
+                    // Do nothing if it's a space
                 }
                 
                 // Either it's not supported yet, or it's an invalid token.
@@ -215,7 +263,7 @@ public:
                 }else if (line_token[i] == LanguageToken::IdentifierToken){
                     std::cout << "Identifier" << std::endl;
                 }else if (line_token[i] == LanguageToken::NumberToken){
-                    std::cout << "Number" << std::endl;
+                    std::cout << "NumberToken" << std::endl;
                 }else if (line_token[i] == LanguageToken::WhiteSpaceToken){
                     std::cout << "WhiteSpace" << std::endl;
                 }else if (line_token[i] == LanguageToken::PlusToken){
@@ -248,6 +296,16 @@ public:
                     std::cout << "CloseParenthesis" << std::endl;
                 }else if (line_token[i] == LanguageToken::LiteralToken){
                     std::cout << "Literal" << std::endl;
+                }else if(line_token[i] == LanguageToken::StringToken){
+                    std::cout << "StringToken" << std::endl;
+                }else if(line_token[i] == LanguageToken::EqualityToken){
+                    std::cout << "EqualityToken" << std::endl;
+                }else if(line_token[i] == LanguageToken::NotEqualToken){
+                    std::cout << "NotEqualToken" << std::endl;
+                }else if(line_token[i] == LanguageToken::TypeIntegerToken){
+                    std::cout << "TypeIntegerToken" << std::endl;
+                }else if(line_token[i] == LanguageToken::TypeFloatToken){
+                    std::cout << "TypeFloatToken" <<std::endl;
                 }
             }
         }
@@ -360,7 +418,8 @@ private:
         {'<', LanguageToken::LessThanToken},
         {'>', LanguageToken::GreaterThanToken},
         {'(', LanguageToken::OpenParenthesisToken},
-        {')', LanguageToken::CloseParenthesisToken}
+        {')', LanguageToken::CloseParenthesisToken},
+        {'!', LanguageToken::NotEqualToken}
     };
     
     // Check if the character is a valid operator
@@ -371,7 +430,7 @@ private:
     std::map<std::string, LanguageToken> LanguageKeywords ={
         {"if", LanguageToken::IfToken},
         {"integer", LanguageToken::TypeIntegerToken},
-        {"float", LanguageToken::TypeFloatToken}
+        {"double", LanguageToken::TypeFloatToken}
     };
 
     // Check if the character is a valid keyword
