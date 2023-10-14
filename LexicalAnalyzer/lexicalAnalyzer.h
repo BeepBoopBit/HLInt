@@ -12,6 +12,7 @@
 class LexicalAnalyzer{
 
 private:
+    // Tokens of the Language
     enum LanguageToken{
         CharacterToken,
         IdentifierToken,
@@ -21,7 +22,7 @@ private:
         MinusToken,
         EndLineToken,
         AssignmentToken,
-        EndOfStatement,
+        EndOfStatementToken,
         ColonToken,
         InvalidToken,
         QuoteToken,
@@ -31,9 +32,12 @@ private:
         IfToken,
         OpenParenthesisToken,
         CloseParenthesisToken,
-        LiteralToken
+        LiteralToken,
+        TypeIntegerToken,
+        TypeFloatToken
     };
-// Variables
+
+// Other Variables
 private:
     bool isDebug = true;
     std::string filename;
@@ -96,27 +100,106 @@ public:
 // Methods
 public:
     void analyze(){
-        
+
+        // Stores the token of the line
         std::vector<LanguageToken> line_token;
 
         // Store the String
-        std::string token;
+        // Not all tokens have token_value;
+        std::string token_value = "";
 
         // Store the character that will be read
-        char c;
+        char c = ' ';
         
         // While the file is open
         while(this->file.is_open()){
+
             // and the file is good
             while(this->file.good()){
-
                 // Store the data from the current Character;
                 file.get(c);
-                LanguageToken tokenType;
-
-                if (this->isDigit(c)){
+                
+                // If the file is at the end of the file
+                if(file.eof()){
+                    break;
                 }
-                if (this->isDigit(c)){
+                
+                // Stores the type of the token
+                LanguageToken tokenType = LanguageToken::InvalidToken;
+                
+                // Enesure that the end of line is ignored. (In the language it isn't relevant)
+                if(c == '\n'){
+                    continue;
+                }
+
+                // Literal ( Doesn't support yet)
+                /**
+                 *
+                 * if ((tokeType == this->isLiteral(c)) != LanguageToken::InvalidToken){
+                 *    line_token.push_back(tokenType);
+                 * }
+                **/
+
+
+                // Operator
+                if((tokenType = this->isOperator(c)) != LanguageToken::InvalidToken){
+                    
+                    // If it's an operator, this would mean that whatever is on the LHS can be an identifier or a keyword.
+                    
+                    // Check if the token_value contains something
+                    if (token_value != ""){
+
+                        // If it's a keyword.
+                        if ((this->isKeyword(token_value)) != LanguageToken::InvalidToken){
+                            // Push it as a keyword
+                            line_token.push_back(tokenType);
+
+                            // And reset the token_value
+                            token_value = "";
+                        }
+                        
+                        // Otherwise, it's an identifier
+                        else{
+                            line_token.push_back(LanguageToken::IdentifierToken);
+                            token_value = "";
+                            line_token.push_back(tokenType);
+                        }
+                    }
+                    
+                    // If it's empty, then it's an operator.
+                    // NOTE: Possible Error Handling. If it's not the EndOfStatementToken then it's probably an error.
+                    else{
+                        line_token.push_back(tokenType);
+                    }
+                }
+
+                // Identifier
+                else if((tokenType = this->isAlphabet(c)) != LanguageToken::InvalidToken){
+                    // Add the character to the token_value
+                    token_value += c;
+                }
+
+                // Number
+                else if((tokenType = this->isDigit(c)) != LanguageToken::InvalidToken){
+
+                    // It's a possibility that an identifier ends with a number.
+
+                    // If the token_value contains something
+                    if (token_value != ""){
+                        // Then it's probably an identifier with a number at the end.
+                        // Add the character to the token_value
+                        token_value += c;
+                    }
+                    
+                    // Otherwise, it's a literal number
+                    else{
+                        line_token.push_back(tokenType);
+                    }
+                }
+                
+                // Either it's not supported yet, or it's an invalid token.
+                else{
+                    std::cout << "Unknown Token Detected at " << this->line << ":" << this->column << std::endl;
                 }
 
                 // Add Column Value
@@ -124,11 +207,57 @@ public:
             }
             this->file.close();
         }
+        
+        if(isDebug){
+            for(int i = 0; i < line_token.size(); i++){
+                if (line_token[i] == LanguageToken::CharacterToken){
+                    std::cout << "Character" << std::endl;
+                }else if (line_token[i] == LanguageToken::IdentifierToken){
+                    std::cout << "Identifier" << std::endl;
+                }else if (line_token[i] == LanguageToken::NumberToken){
+                    std::cout << "Number" << std::endl;
+                }else if (line_token[i] == LanguageToken::WhiteSpaceToken){
+                    std::cout << "WhiteSpace" << std::endl;
+                }else if (line_token[i] == LanguageToken::PlusToken){
+                    std::cout << "Plus" << std::endl;
+                }else if (line_token[i] == LanguageToken::MinusToken){
+                    std::cout << "Minus" << std::endl;
+                }else if (line_token[i] == LanguageToken::EndLineToken){
+                    std::cout << "EndLine" << std::endl;
+                }else if (line_token[i] == LanguageToken::AssignmentToken){
+                    std::cout << "Assignment" << std::endl;
+                }else if (line_token[i] == LanguageToken::EndOfStatementToken){
+                    std::cout << "EndOfStatement" << std::endl;
+                }else if (line_token[i] == LanguageToken::ColonToken){
+                    std::cout << "Colon" << std::endl;
+                }else if (line_token[i] == LanguageToken::InvalidToken){
+                    std::cout << "Invalid" << std::endl;
+                }else if (line_token[i] == LanguageToken::QuoteToken){
+                    std::cout << "Quote" << std::endl;
+                }else if (line_token[i] == LanguageToken::LeftShiftToken){
+                    std::cout << "LeftShift" << std::endl;
+                }else if (line_token[i] == LanguageToken::LessThanToken){
+                    std::cout << "LessThan" << std::endl;
+                }else if (line_token[i] == LanguageToken::GreaterThanToken){
+                    std::cout << "GreaterThan" << std::endl;
+                }else if (line_token[i] == LanguageToken::IfToken){
+                    std::cout << "If" << std::endl;
+                }else if (line_token[i] == LanguageToken::OpenParenthesisToken){
+                    std::cout << "OpenParenthesis" << std::endl;
+                }else if (line_token[i] == LanguageToken::CloseParenthesisToken){
+                    std::cout << "CloseParenthesis" << std::endl;
+                }else if (line_token[i] == LanguageToken::LiteralToken){
+                    std::cout << "Literal" << std::endl;
+                }
+            }
+        }
     }
 
 // Checkers
 private:
 
+    // Contains the alphabet of the language
+    // I used map because it's faster to search than normal looping
     std::map<char, LanguageToken> alphabet ={
         {'a', LanguageToken::CharacterToken},
         {'b', LanguageToken::CharacterToken},
@@ -194,11 +323,14 @@ private:
         {'8', LanguageToken::CharacterToken},
         {'9', LanguageToken::CharacterToken},
     };
-
-   LanguageToken inAlphabet(char c){
+    
+    // Check if the character is in the alphabet
+    LanguageToken isAlphabet(char c){
         return this->alphabet.find(c) != this->alphabet.end() ? this->alphabet[c] : LanguageToken::InvalidToken;
     }
     
+    // Contains the digit of the language
+    // I used map because it's faster to search than normal looping
     std::map<char, LanguageToken> numberAlphabet ={
         {'0', LanguageToken::NumberToken},
         {'1', LanguageToken::NumberToken},
@@ -211,15 +343,18 @@ private:
         {'8', LanguageToken::NumberToken},
         {'9', LanguageToken::NumberToken}
     };
+
+    // Check if the character is a valid digit
     LanguageToken isDigit(char c){
         return this->numberAlphabet.find(c) != this->numberAlphabet.end() ? this->numberAlphabet[c] : LanguageToken::InvalidToken;
     }
     
+    // Contains the operator of the language
     std::map<char, LanguageToken> operatorAlphabet ={
         {'+', LanguageToken::PlusToken},
         {'-', LanguageToken::MinusToken},
         {'=', LanguageToken::AssignmentToken},
-        {';', LanguageToken::EndOfStatement},
+        {';', LanguageToken::EndOfStatementToken},
         {':', LanguageToken::ColonToken},
         {'"', LanguageToken::QuoteToken},
         {'<', LanguageToken::LessThanToken},
@@ -227,10 +362,23 @@ private:
         {'(', LanguageToken::OpenParenthesisToken},
         {')', LanguageToken::CloseParenthesisToken}
     };
-
+    
+    // Check if the character is a valid operator
     LanguageToken isOperator(char c){
         return this->operatorAlphabet.find(c) != this->operatorAlphabet.end() ? this->operatorAlphabet[c] : LanguageToken::InvalidToken;
     }
+
+    std::map<std::string, LanguageToken> LanguageKeywords ={
+        {"if", LanguageToken::IfToken},
+        {"integer", LanguageToken::TypeIntegerToken},
+        {"float", LanguageToken::TypeFloatToken}
+    };
+
+    // Check if the character is a valid keyword
+    LanguageToken isKeyword(std::string str){
+        return this->LanguageKeywords.find(str) != this->LanguageKeywords.end() ? this->LanguageKeywords[str] : LanguageToken::InvalidToken;;
+    }
+
 
 // Others
 private:

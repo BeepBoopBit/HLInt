@@ -1,10 +1,12 @@
 #include "HLint.h"
 
 int main(int argc, char** argv){
-    // read the argument from the command line
-
+    
+    // Ensure that the user has provided the file name
     if (argc == 1){
-        std::cout << "Please provide the file name" << std::endl;
+        std::cout << "Please provide the file name. Going to default 'test.txt'" << std::endl;
+        HLint* hlint = new HLint("test.txt");
+        hlint->start();
     }else{
         std::string filename = argv[1];
         HLint* hlint = new HLint(filename);
