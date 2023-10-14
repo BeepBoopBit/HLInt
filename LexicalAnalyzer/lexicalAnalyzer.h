@@ -203,6 +203,11 @@ public:
                                 // Consume the next file
                                 file.get(next);
                             }
+
+                            if(c == ':' && next == '='){
+                                tokenType = LanguageToken::AssignmentToken;
+                                file.get(next);
+                            }
                         }
                         if(tokenType == LanguageToken::EndOfStatementToken){
                             line_token.push_back(tokenType);
