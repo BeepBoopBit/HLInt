@@ -95,26 +95,33 @@ public:
 
 private:
     bool mathematicalExpression(std::vector<LanguageToken> &line_token, int position){
-        // Position at NumberToken
+        // Position at Literal
         try{
             if(line_token[position] == LanguageDictionary::EndOfStatementToken){
                 return true;
             }
 
+            // Give Position at Identifier or Literal
+            bool firstRule = isIdentifierOrLiteral(line_token[position++]);
+
             if(parenthesisBalancer(line_token[position++])){
                 std::vector<LanguageToken> new_line_token(line_token.begin()+(position), line_token.end());
                 return analyze(new_line_token);
             }
+
             // get back to position
             position--;
 
-            // Give Position at Identifier or Literal
-            bool firstRule = isOperator(line_token[position++]);
-
             // Give Position at Operator
-            bool secondRule = isIdentifierOrLiteral(line_token[position++]);
+            bool secondRule = isOperator(line_token[position++]);
 
-            if(firstRule && secondRule){
+            // Probably a Conditional Statement
+            if(firstRule && !secondRule){
+                // Check if it's a condition
+                if(isConditionalOperator(line_token[--position])){
+                    return mathematicalExpression(line_token, ++position) ? std::cout << "Success in Condition" << std::endl, true : false;
+                }
+            }else if(firstRule && secondRule){
                 // Give Position at Identifier or Literal
                 return mathematicalExpression(line_token, position);
             }else{
@@ -197,20 +204,22 @@ private:
             //int tempPosition = position;
             parenthesisBalancer(line_token[(++position)++]);
             
-            bool firstRule = isIdentifierOrLiteral(line_token[position++]);
-            bool secondRule = isConditionalOperator(line_token[position++]);
-            bool thirdRule = isIdentifierOrLiteral(line_token[position++]);
+            //bool firstRule = isIdentifierOrLiteral(line_token[position++]);
+            //bool secondRule = isConditionalOperator(line_token[position++]);
+            //bool thirdRule = isIdentifierOrLiteral(line_token[position++]);
 
             //if(isIdentifierOrLiteral(line_token[position++]) && isConditionalOperator(line_token[position++]) && isIdentifierOrLiteral(line_token[position++])){
-            if(firstRule && secondRule && thirdRule){
+            //if(firstRule && secondRule && thirdRule){
+            if(mathematicalExpression(line_token, position)){
                 // Balance parenthesis
                 if(parenthesisBalancer(line_token[position++]) && parenthesis_count != 0){
                     return false;
                 }
+                return true;
 
                 // Position at statement
-                std::vector<LanguageToken> new_line_token(line_token.begin()+(--position), line_token.end());
-                return analyze(new_line_token);
+                //std::vector<LanguageToken> new_line_token(line_token.begin()+(--position), line_token.end());
+                //return analyze(new_line_token);
             }
         }catch(...){
             std::cout << "Not Enough Position" << std::endl;
@@ -241,6 +250,10 @@ private:
             return true;
         }else if(token == LanguageToken::CloseParenthesisToken){
             parenthesis_count -= 1;
+            if(parenthesis_count < 0){
+                std::cout << "Error, no matching parenthesis. Still trying to Continue (DEBUG)" << std::endl;
+                return true;
+            }
             return true;
         }
         return false;

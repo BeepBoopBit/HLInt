@@ -229,8 +229,9 @@ public:
                                 file.get(next);
                             }
                             line_token.push_back(LanguageToken::StringToken);
+                        }else{
+                            line_token.push_back(tokenType);
                         }
-                        //line_token.push_back(tokenType);
                     }
                     token_value = "";
                 }

@@ -1,5 +1,8 @@
+if (xyz == 2)
+    output << xyz;
 xyz:integer;
 xyz:double;
+xy = 3 + 6;
 xyz = 1 + 2 + 3 - xyz + 4 - 9;
 if (xyz < 10 + 20 - 5)
     output << xyz;
