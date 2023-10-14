@@ -1,3 +1,4 @@
+x := 5;
 output << "hello";
 xyz := 1 + 2 + 3 - xyz + 4 - 9;
 ;

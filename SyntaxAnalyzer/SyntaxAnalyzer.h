@@ -3,8 +3,8 @@
 
 #include <vector>
 #include <iostream>
-
 #include "../LanguageDictionary/LanguageDictionary.h"
+#include "../ErrorHandler/ErrorHandler.h"
 
 
 /** Entended Backus-Naur Form for HLint
@@ -38,29 +38,28 @@ class SyntaxAnalyzer{
 private:
     using LanguageToken = LanguageDictionary::LanguageToken;
     int parenthesis_count = 0, quote_count = 0;
+    ErrorHandler* errorHandler = &ErrorHandler::getInstance();
 
 public:
     SyntaxAnalyzer(){
-        std::cout << "Syntax Analyzer has been Created" << std::endl;
     }
     bool analyze(std::vector<LanguageToken> line_token){
         if (line_token[0] == LanguageToken::IdentifierToken){
-            return identifier(line_token, 0) ? std::cout << "Success in Identifier" << std::endl, true : false;;
+            return identifier(line_token, 0) ? std::cout << "Success in Identifier" << std::endl, true : errorHandler->error(line_token[0]);
         }
         else if (line_token[0] == LanguageToken::IfToken){
-            return oneWayIfCondition(line_token, 0) ? std::cout << "Success in If" << std::endl, true : false;;
+            return oneWayIfCondition(line_token, 0) ? std::cout << "Success in If" << std::endl, true : errorHandler->error(line_token[0]);
         }
         else if(line_token[0] == LanguageDictionary::NumberToken || isOperator(line_token[0])){
-            return mathematicalExpression(line_token, 0) ? std::cout << "Success in MathematicalExpression" << std::endl, true : false;;
+            return mathematicalExpression(line_token, 0) ? std::cout << "Success in MathematicalExpression" << std::endl, true : errorHandler->error(line_token[0]);
         }
         else if(line_token[0] == LanguageDictionary::OutputToken){
-            return output(line_token, 0) ? std::cout << "Success in Output" << std::endl, true : false;;
+            return output(line_token, 0) ? std::cout << "Success in Output" << std::endl, true : errorHandler->error(line_token[0]);
         }else if(line_token[0] == LanguageDictionary::EndOfStatementToken){
             return true;
         }
         else{
-            std::cout << "Error in Syntax Analyzer" << std::endl;
-            return false;
+            return errorHandler->error(line_token[0]);
         }
     }
 
@@ -96,13 +95,12 @@ private:
                 // Give Position at Identifier or Literal
                 return mathematicalExpression(line_token, position);
             }else{
-                return false;
+                return errorHandler->error(line_token[position]);
             }
         }catch(...){
-            std::cout << "Not Enough Position" << std::endl;
-            return false;
+            return errorHandler->error(line_token[position]);
         }
-        return false;
+        return errorHandler->error(line_token[position]);
     }
     bool identifier(std::vector<LanguageToken> &line_token, int position){
         try{
@@ -113,11 +111,10 @@ private:
                 return assignment(line_token, position+1);
             }
             else{
-                return false;
+                return errorHandler->error(line_token[position]);
             }
         }catch(...){
-            std::cout << "Not Enough Position" << std::endl;
-            return false;
+            return errorHandler->error(line_token[position]);
         }
     }
     bool declaration(std::vector<LanguageToken> &line_token, int position){
@@ -128,12 +125,11 @@ private:
                     return true;
                 }
                 else{
-                    return false;
+                    return errorHandler->error(line_token[position]);
                 }
             }
         }catch(...){
-            std::cout << "Not Enough Position" << std::endl;
-            return false;
+            return errorHandler->error(line_token[position]);
         }
         return false;
     }
@@ -147,7 +143,7 @@ private:
                 if(line_token[position++] == LanguageToken::EndOfStatementToken){
                     // Check if Parenthesis is balanced
                     if (parenthesis_count != 0){
-                        return false;
+                        return errorHandler->error(line_token[position]);
                     }
                     std::cout << "Success in Assignment" << std::endl;
                     return true;
@@ -159,13 +155,12 @@ private:
                         return assignment(line_token, position);
                     }
                     else{
-                        return false;
+                        return errorHandler->error(line_token[position]);
                     }
                 }
             }
         }catch(...){
-            std::cout << "Not Enough Position" << std::endl;
-            return false;
+            return errorHandler->error(line_token[position]);
         }
         return false;
     }
@@ -184,7 +179,7 @@ private:
             if(mathematicalExpression(line_token, position)){
                 // Balance parenthesis
                 if(parenthesisBalancer(line_token[position++]) && parenthesis_count != 0){
-                    return false;
+                    return errorHandler->error(line_token[position]);
                 }
                 return true;
 
@@ -193,10 +188,9 @@ private:
                 //return analyze(new_line_token);
             }
         }catch(...){
-            std::cout << "Not Enough Position" << std::endl;
-            return false;
+            return errorHandler->error(line_token[position]);
         }
-        return false;
+        return errorHandler->error(line_token[position]);
     }
     bool output(std::vector<LanguageToken> &line_token, int position){
         // Position at OutputToken
@@ -209,10 +203,9 @@ private:
                 return true;
             }
         }catch(...){
-            std::cout << "Not Enough Position" << std::endl;
-            return false;
+            return errorHandler->error(line_token[position]);
         }
-        return false;
+        return errorHandler->error(line_token[position]);
     }
 private:
     bool parenthesisBalancer(LanguageToken token){
