@@ -55,6 +55,8 @@ public:
         }
         else if(line_token[0] == LanguageDictionary::OutputToken){
             return output(line_token, 0) ? std::cout << "Success in Output" << std::endl, true : false;;
+        }else if(line_token[0] == LanguageDictionary::EndOfStatementToken){
+            return true;
         }
         else{
             std::cout << "Error in Syntax Analyzer" << std::endl;
