@@ -35,6 +35,14 @@ Store and maintain information amongst the classes. This include creating, delet
 * void operator=(SymbolTable const&) = delete
     * Deleted assignment operator since the SymbolTable is a sigleton
 
+### LexicalAnalyzer
+
+
+
+### ErrorHandler
+
+
+
 ## Variables
 
 * std::map<std::string, ObjectType*> variableTable;
@@ -47,9 +55,9 @@ This handles the mathematical operators within the program. This includes the de
 ##### Constructor
 
 * ObjectTypeInt(std::string name)
-    * 
+    * This sets the type of the object to a certain data type (Integer or Double)
 
-###### Methods
+##### Methods
 
 * std::string getName()
     * This gets access from the name attribute and returns its value.
@@ -57,4 +65,9 @@ This handles the mathematical operators within the program. This includes the de
     * This gets access from the type attribute and returns its value.
 * int getValue()
     * This gets access from the private attribute value and return its value.
+
+##### Operators
+
+
+
 
