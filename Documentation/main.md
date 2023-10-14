@@ -23,14 +23,14 @@ Interface for the whole interpreter.
 
 Store and maintain information amongst the classes. This include creating, deleting, modifying, and reading information created by the program.
 
-### Constructor
+#### Constructor
 
 * SymbolTable()
     * Private Constructor to deploy a singleton class
 * SymbolTable(SymbolTable const&)
     * Private Copy Constructor to avoid multiple copy of the class
 
-### Methods
+#### Methods
 
 * void operator=(SymbolTable const&) = delete
     * Deleted assignment operator since the SymbolTable is a sigleton
@@ -42,4 +42,19 @@ Store and maintain information amongst the classes. This include creating, delet
 
 #### Auxillary Class: ObjectType
 
-This handles the mathematical operators within the program. This includes the declaration of data types, obtaining values, and different operators
+This handles the mathematical operators within the program. This includes the declaration of data types, obtaining values, and different operators.
+
+##### Constructor
+
+* ObjectTypeInt(std::string name)
+    * 
+
+###### Methods
+
+* std::string getName()
+    * This gets access from the name attribute and returns its value.
+* std::string getType()
+    * This gets access from the type attribute and returns its value.
+* int getValue()
+    * This gets access from the private attribute value and return its value.
+
