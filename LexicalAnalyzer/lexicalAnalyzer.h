@@ -116,6 +116,11 @@ public:
                 if(file.eof()){
                     break;
                 }
+
+                // Check if it's a white space
+                if(c == ' '){
+                    continue;
+                }
                 
                 // Stores the type of the token
                 LanguageToken tokenType = LanguageToken::InvalidToken;
@@ -230,6 +235,23 @@ public:
                             }
                             line_token.push_back(LanguageToken::StringToken);
                         }else{
+                            char next = file.peek();
+                            if(c == '<' && next == '<'){
+                                tokenType = LanguageToken::LeftShiftToken;
+
+                                // Consume the next file
+                                file.get(next);
+                            }else if(c == '!' && next  == '='){
+                                tokenType = LanguageToken::NotEqualToken;
+
+                                // Consume the next file
+                                file.get(next);
+                            }else if(c == '=' && next == '='){
+                                tokenType = LanguageToken::EqualityToken;
+
+                                // Consume the next file
+                                file.get(next);
+                            }
                             line_token.push_back(tokenType);
                         }
                     }
@@ -244,11 +266,6 @@ public:
                     // Add the character to the token_value
                     token_value += c;
                 }
-
-                else if(c == ' '){
-                    // Do nothing if it's a space
-                }
-                
                 // Either it's not supported yet, or it's an invalid token.
                 else{
                     std::cout << "Unknown Token Detected at " << this->line << ":" << this->column << std::endl;
