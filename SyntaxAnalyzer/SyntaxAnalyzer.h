@@ -191,6 +191,7 @@ private:
             bool thirdRule = isIdentifierOrLiteral(line_token[position++]);
             bool fourtRule = line_token[position++] == LanguageDictionary::EndOfStatementToken;
             if(firstRule && secondRule && thirdRule && fourtRule){
+                _errorHandler->displaySuccess("OutputToken");
                 return true;
             }
         }catch(...){

@@ -96,7 +96,7 @@ public:
     }
     void displaySuccess(std::string success){
         if(_isDebug){
-            std::cout << "[SUCCESS] " << success << '\n';
+            std::cout << "[SUCCESS] Token: " << success << '\n';
         }
     }
 
