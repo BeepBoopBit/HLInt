@@ -41,3 +41,5 @@ Store and maintain information amongst the classes. This include creating, delet
     * Contains all information about variables that is being used in the program.
 
 #### Auxillary Class: ObjectType
+
+This handles the mathematical operators within the program. This includes the declaration of data types, obtaining values, and different operators
