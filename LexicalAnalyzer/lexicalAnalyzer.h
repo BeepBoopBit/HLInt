@@ -307,8 +307,8 @@ public:
                     std::cout << "NotEqualToken" << std::endl;
                 }else if(line_token[i] == LanguageToken::TypeIntegerToken){
                     std::cout << "TypeIntegerToken" << std::endl;
-                }else if(line_token[i] == LanguageToken::TypeFloatToken){
-                    std::cout << "TypeFloatToken" <<std::endl;
+                }else if(line_token[i] == LanguageToken::TypeDoubleToken){
+                    std::cout << "TypeDoubleToken" <<std::endl;
                 }
             }
         }
@@ -433,7 +433,7 @@ private:
     std::map<std::string, LanguageToken> LanguageKeywords ={
         {"if", LanguageToken::IfToken},
         {"integer", LanguageToken::TypeIntegerToken},
-        {"double", LanguageToken::TypeFloatToken},
+        {"double", LanguageToken::TypeDoubleToken},
         {"output", LanguageToken::OutputToken}
     };
 

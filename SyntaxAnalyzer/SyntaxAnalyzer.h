@@ -56,7 +56,7 @@ public:
         CloseParenthesisToken,
         LiteralToken,
         TypeIntegerToken,
-        TypeFloatToken,
+        TypeDoubleToken,
         OutputToken,
     };
 
@@ -145,7 +145,7 @@ private:
     bool declaration(std::vector<LanguageToken> &line_token, int position){
         // Position at ColonToken
         try{
-            if(line_token[position+1] == LanguageToken::TypeIntegerToken || line_token[position+1] == LanguageToken::TypeFloatToken){
+            if(line_token[position+1] == LanguageToken::TypeIntegerToken || line_token[position+1] == LanguageToken::TypeDoubleToken){
                 if(line_token[position+2] == LanguageToken::EndOfStatementToken){
                     return true;
                 }
