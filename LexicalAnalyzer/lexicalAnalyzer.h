@@ -257,7 +257,15 @@ public:
                                 // Consume the next file
                                 file.get(next);
                             }
-                            line_token.push_back(tokenType);
+                            if(tokenType == LanguageToken::EndOfStatementToken){
+                                line_token.push_back(tokenType);
+                                if(!this->syntaxAnalyzer->analyze(line_token)){
+                                    std::cout << "Error at line " << this->line << " before column" << this->column << std::endl;
+                                }
+                                line_token.clear();
+                            }else{
+                                line_token.push_back(tokenType);
+                            }
                         }
                     }
                     token_value = "";
