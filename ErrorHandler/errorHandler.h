@@ -17,6 +17,7 @@ private:
     std::string _errorLogPath = "error.log";
     std::ofstream _errorLog;
     bool _isDebug = true;
+    std::string _errorString = "";
 
 private:
     ErrorHandler(){}
@@ -36,7 +37,22 @@ public:
 
 
 public:
-    bool error(LanguageToken token){
+    bool lastError(LanguageToken, bool state = false){
+        if (state){
+            return true;
+        }
+        std::cout << "#########################ERROR BREAKDOWN#########################"<< std::endl;
+        std::cout << _errorString << std::endl;
+        std::cout << "##################################################################"<< std::endl;
+        return false;
+    }
+    bool error(LanguageToken token, bool state = false){
+        if(state){
+            if(_isDebug){
+                std::cout << "[SUCCESS] Token: " << LanguageDictionary::getInstance().getTokenName(token) << std::endl;
+            }
+            return true;
+        }
         switch(token){
             case LanguageToken::OpenParenthesisToken:
             case LanguageToken::CloseParenthesisToken:
@@ -73,45 +89,56 @@ public:
         }
         return false;
     }
+    void displayError(std::string error, std::string caller = "Unknown"){
+        std::cout << "\n\n#########################ERROR BREAKDOWN#########################\n";
+        std::cout << "[ERROR] " << error << " from " << caller << '\n';
+        std::cout << "#################################################################\n\n";
+    }
+    void displaySuccess(std::string success){
+        if(_isDebug){
+            std::cout << "[SUCCESS] " << success << '\n';
+        }
+    }
+
     void logError();
     void parentesisError(){
-        std::cout << "[!] Error no matching parenthesis." << std::endl;
+        _errorString += "[!] Error no matching parenthesis.\n";
         _debug("Trying to Continue");
     }
     void identifierError(){
-        std::cout << "[!] Error in Identifier." << std::endl;
+        _errorString += "[!] Error in Identifier.\n";
         _debug("Trying to Continue");
     }
     void oneWayIfConditionError(){
-        std::cout << "[!] Error in One-Way If Condition." << std::endl;
+        _errorString += "[!] Error in One-Way If Condition.\n";
         _debug("Trying to Continue");
     }
     void mathematicalExpressionError(){
-        std::cout << "[!] Error in Mathematical Expression." << std::endl;
+        _errorString += "[!] Error in Mathematical Expression.\n";
         _debug("Trying to Continue");
     }
     void outputError(){
-        std::cout << "[!] Error in Output." << std::endl;
+        _errorString += "[!] Error in Output.\n";
         _debug("Trying to Continue");
     }
     void syntaxAnalyzerError(LanguageToken token){
-        std::cout << "[!] Error in Syntax Analyzer. Last token is: " << std::endl;
+        _errorString += "[!] Error in Syntax Analyzer. Last token is: " + LanguageDictionary::getInstance().getTokenName(token) + "\n";
         _debug("Trying to Continue");
     }
     void lexicalAnalyzerError(){
-        std::cout << "[!] Error in Lexical Analyzer." << std::endl;
+        _errorString += "[!] Error in Lexical Analyzer.\n";
         _debug("Trying to Continue");
     }
     void assignmentError(){
-        std::cout << "[!] Error in Assignment." << std::endl;
+        _errorString += "[!] Error in Assignment.\n";
         _debug("Trying to Continue");
     }
     void declarationError(){
-        std::cout << "[!] Error in Declaration." << std::endl;
+        _errorString += "[!] Error in Declaration.\n";
         _debug("Trying to Continue");
     }
     void conditionError(){
-        std::cout << "[!] Error in Condition." << std::endl;
+        _errorString += "[!] Error in Condition.\n";
         _debug("Trying to Continue");
     }
 
@@ -120,7 +147,7 @@ public:
 private:
     void _debug(std::string message){
         if(_isDebug){
-            std::cout << "[DEBUG]" << message << std::endl;
+            _errorString += "[DEBUG] " + message + "\n";
         }
     }
 };

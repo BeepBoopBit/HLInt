@@ -38,28 +38,28 @@ class SyntaxAnalyzer{
 private:
     using LanguageToken = LanguageDictionary::LanguageToken;
     int parenthesis_count = 0, quote_count = 0;
-    ErrorHandler* errorHandler = &ErrorHandler::getInstance();
+    ErrorHandler* _errorHandler = &ErrorHandler::getInstance();
 
 public:
     SyntaxAnalyzer(){
     }
     bool analyze(std::vector<LanguageToken> line_token){
         if (line_token[0] == LanguageToken::IdentifierToken){
-            return identifier(line_token, 0) ? std::cout << "Success in Identifier" << std::endl, true : errorHandler->error(line_token[0]);
+            return _errorHandler->lastError(line_token[0],identifier(line_token,0));
         }
         else if (line_token[0] == LanguageToken::IfToken){
-            return oneWayIfCondition(line_token, 0) ? std::cout << "Success in If" << std::endl, true : errorHandler->error(line_token[0]);
+            return _errorHandler->lastError(line_token[0],oneWayIfCondition(line_token,0));
         }
         else if(line_token[0] == LanguageDictionary::NumberToken || isOperator(line_token[0])){
-            return mathematicalExpression(line_token, 0) ? std::cout << "Success in MathematicalExpression" << std::endl, true : errorHandler->error(line_token[0]);
+            return _errorHandler->lastError(line_token[0],mathematicalExpression(line_token,0));
         }
         else if(line_token[0] == LanguageDictionary::OutputToken){
-            return output(line_token, 0) ? std::cout << "Success in Output" << std::endl, true : errorHandler->error(line_token[0]);
+            return _errorHandler->lastError(line_token[0],output(line_token,0));
         }else if(line_token[0] == LanguageDictionary::EndOfStatementToken){
             return true;
         }
         else{
-            return errorHandler->error(line_token[0]);
+            return _errorHandler->lastError(line_token[0]);
         }
     }
 
@@ -76,7 +76,7 @@ private:
 
             if(parenthesisBalancer(line_token[position++])){
                 std::vector<LanguageToken> new_line_token(line_token.begin()+(position), line_token.end());
-                return analyze(new_line_token);
+                return _errorHandler->error(line_token[position],analyze(new_line_token));
             }
 
             // get back to position
@@ -89,32 +89,33 @@ private:
             if(firstRule && !secondRule){
                 // Check if it's a condition
                 if(isConditionalOperator(line_token[--position])){
-                    return mathematicalExpression(line_token, ++position) ? std::cout << "Success in Condition" << std::endl, true : false;
+                    ++position;
+                    return _errorHandler->error(line_token[position],mathematicalExpression(line_token, position));
                 }
             }else if(firstRule && secondRule){
                 // Give Position at Identifier or Literal
-                return mathematicalExpression(line_token, position);
+                return _errorHandler->error(line_token[position],mathematicalExpression(line_token, position));
             }else{
-                return errorHandler->error(line_token[position]);
+                return _errorHandler->error(line_token[position]);
             }
         }catch(...){
-            return errorHandler->error(line_token[position]);
+            return _errorHandler->error(line_token[position]);
         }
-        return errorHandler->error(line_token[position]);
+        return _errorHandler->error(line_token[position]);
     }
     bool identifier(std::vector<LanguageToken> &line_token, int position){
         try{
             if(line_token[position+1] == LanguageToken::ColonToken){
-                return declaration(line_token, position+1);
+                return _errorHandler->error(line_token[position],declaration(line_token, position+1));
             }
             else if(line_token[position+1] == LanguageToken::AssignmentToken){
-                return assignment(line_token, position+1);
+                return _errorHandler->error(line_token[position],assignment(line_token, position+1));
             }
             else{
-                return errorHandler->error(line_token[position]);
+                return _errorHandler->error(line_token[position]);
             }
         }catch(...){
-            return errorHandler->error(line_token[position]);
+            return _errorHandler->error(line_token[position]);
         }
     }
     bool declaration(std::vector<LanguageToken> &line_token, int position){
@@ -125,11 +126,11 @@ private:
                     return true;
                 }
                 else{
-                    return errorHandler->error(line_token[position]);
+                    return _errorHandler->error(line_token[position]);
                 }
             }
         }catch(...){
-            return errorHandler->error(line_token[position]);
+            return _errorHandler->error(line_token[position]);
         }
         return false;
     }
@@ -143,54 +144,44 @@ private:
                 if(line_token[position++] == LanguageToken::EndOfStatementToken){
                     // Check if Parenthesis is balanced
                     if (parenthesis_count != 0){
-                        return errorHandler->error(line_token[position]);
+                        return _errorHandler->error(line_token[position]);
                     }
-                    std::cout << "Success in Assignment" << std::endl;
+                    _errorHandler->displaySuccess("AssignmentToken");
                     return true;
                 }
                 else{
                     if (isOperator(line_token[--position])){
 
                         // Position given at Operator
-                        return assignment(line_token, position);
+                        return _errorHandler->error(line_token[position],assignment(line_token, position));
                     }
                     else{
-                        return errorHandler->error(line_token[position]);
+                        return _errorHandler->error(line_token[position]);
                     }
                 }
             }
         }catch(...){
-            return errorHandler->error(line_token[position]);
+            return _errorHandler->error(line_token[position]);
         }
         return false;
     }
     bool oneWayIfCondition(std::vector<LanguageToken> &line_token, int position){
         // Position at IfToken
         try{
-            //int tempPosition = position;
             parenthesisBalancer(line_token[(++position)++]);
             
-            //bool firstRule = isIdentifierOrLiteral(line_token[position++]);
-            //bool secondRule = isConditionalOperator(line_token[position++]);
-            //bool thirdRule = isIdentifierOrLiteral(line_token[position++]);
-
-            //if(isIdentifierOrLiteral(line_token[position++]) && isConditionalOperator(line_token[position++]) && isIdentifierOrLiteral(line_token[position++])){
-            //if(firstRule && secondRule && thirdRule){
             if(mathematicalExpression(line_token, position)){
                 // Balance parenthesis
                 if(parenthesisBalancer(line_token[position++]) && parenthesis_count != 0){
-                    return errorHandler->error(line_token[position]);
+                    return _errorHandler->error(line_token[position]);
                 }
                 return true;
 
-                // Position at statement
-                //std::vector<LanguageToken> new_line_token(line_token.begin()+(--position), line_token.end());
-                //return analyze(new_line_token);
             }
         }catch(...){
-            return errorHandler->error(line_token[position]);
+            return _errorHandler->error(line_token[position]);
         }
-        return errorHandler->error(line_token[position]);
+        return _errorHandler->error(line_token[position]);
     }
     bool output(std::vector<LanguageToken> &line_token, int position){
         // Position at OutputToken
@@ -203,9 +194,9 @@ private:
                 return true;
             }
         }catch(...){
-            return errorHandler->error(line_token[position]);
+            return _errorHandler->error(line_token[position]);
         }
-        return errorHandler->error(line_token[position]);
+        return _errorHandler->error(line_token[position]);
     }
 private:
     bool parenthesisBalancer(LanguageToken token){

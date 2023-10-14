@@ -10,6 +10,7 @@
 #include "../SymbolTable/symbolTable.h"
 #include "../SyntaxAnalyzer/SyntaxAnalyzer.h"
 #include "../LanguageDictionary/LanguageDictionary.h"
+#include "../ErrorHandler/ErrorHandler.h"
 
 class LexicalAnalyzer{
 
@@ -18,6 +19,7 @@ private:
     //SyntaxAnalyzer* syntaxAnalyzer;
     LanguageDictionary* _languageDictionary;
     SyntaxAnalyzer* _syntaxAnalyzer;
+    ErrorHandler* _errorHandler;
 
 private:
     
@@ -80,10 +82,13 @@ public:
         //this->symbolTable = new SymbolTable();
 
         // Initialize the language dictionary
-        this->_languageDictionary = new LanguageDictionary();
+        this->_languageDictionary = &LanguageDictionary::getInstance();
 
         // Initialize the syntax analyzer
         this->_syntaxAnalyzer = new SyntaxAnalyzer();
+
+        // Initialize the error handler
+        this->_errorHandler = &ErrorHandler::getInstance();
 
         // Open the file
         this->_file.open(filename);
@@ -336,7 +341,7 @@ private:
                 while(this->isOperator(next) != LanguageToken::QuoteToken){
                     tempValue += next;
                     if(_file.eof()){
-                        std::cout << "ERROR: Missing Quote Equivalent" << std::endl;
+                        _errorHandler->displayError("Missing Quote Equivalent", "LexicalAnalyzer");
                         return;
                     }
                     _file.get(next);
@@ -351,7 +356,7 @@ private:
                 if(tokenType == LanguageToken::EndOfStatementToken){
                     line_token.push_back(tokenType);
                     if(!this->_syntaxAnalyzer->analyze(line_token)){
-                        std::cout << "Error at line " << this->_line << " before column " << this->_column << std::endl;
+                        _errorHandler->displayError("Error at line " + std::to_string(this->_line) + " before column " + std::to_string(this->_column), "LexicalAnalyzer");
                     }
                     line_token.clear();
                 }else{
@@ -364,7 +369,7 @@ private:
 
     void processIdentifier(std::string& token_value, char& c, bool& isDigit){
         if (isDigit){
-            std::cout << "ERROR: You can't start an identifier with a number";
+            _errorHandler->displayError("Error: You can't start an identifier with a number", "LexicalAnalyzer");
         }
         // Add the character to the token_value
         token_value += c;
