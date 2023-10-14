@@ -55,19 +55,45 @@ This handles the mathematical operators within the program. This includes the de
 ##### Constructor
 
 * ObjectTypeInt(std::string name)
-    * This sets the type of the object to a certain data type (Integer or Double)
+    * This sets the type of the object to a certain data type such as "integer."
+    * The same thing is applied with the double data type under the ObjectTypeDouble class.
 
 ##### Methods
 
 * std::string getName()
     * This gets access from the name attribute and returns its value.
+
 * std::string getType()
     * This gets access from the type attribute and returns its value.
+
 * int getValue()
     * This gets access from the private attribute value and return its value.
 
 ##### Operators
 
+* It defines the operators used and how they behave within the program. This includes the assignment, addition, subtraction, multiplication, and division.
+    * The process has two classes: ObjectTypeInt (deals with integer values) and ObjectTypeDouble (deals with double values).
 
+###### Assignment
+
+* ObjectTypeInt operator=(int value)
+    * This overloads the '=' to assign an integer value.
+
+* ObjectTypeDouble operator=(double value)
+    * This overloads the '=' to assign a double value.
+
+* ObjectTypeInt operator=(ObjectTypeInt value)
+    * This overloads the '=' to copy an integer value from one object to another.
+
+* ObjectTypeDouble operator=(ObjectTypeDouble value)
+    * This overloads the '=' to copy a double value from one object to another.
+
+###### Addition
+
+###### Subtraction
+
+###### Multiplication
+
+###### Division
 
 
