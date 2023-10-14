@@ -4,6 +4,8 @@
 #include <vector>
 #include <iostream>
 
+#include "../LanguageDictionary/LanguageDictionary.h"
+
 
 /** Entended Backus-Naur Form for HLint
  *
@@ -28,39 +30,6 @@
  * Statement := Assignment | Declaration | Output
  * One-Way-If-Condition := 'if', '(', Condition, ')', Statement, End-Of-Statement
 **/
-
-class LanguageDictionary{
-public:
-    // Tokens of the Language
-    enum LanguageToken{
-        CharacterToken,
-        IdentifierToken,
-        NumberToken,
-        StringToken,
-        WhiteSpaceToken,
-        PlusToken,
-        MinusToken,
-        EndLineToken,
-        AssignmentToken,
-        EndOfStatementToken,
-        ColonToken,
-        InvalidToken,
-        QuoteToken,
-        LeftShiftToken,
-        LessThanToken,
-        GreaterThanToken,
-        EqualityToken,
-        NotEqualToken,
-        IfToken,
-        OpenParenthesisToken,
-        CloseParenthesisToken,
-        LiteralToken,
-        TypeIntegerToken,
-        TypeDoubleToken,
-        OutputToken,
-    };
-
-};
 
 
 class SyntaxAnalyzer{
