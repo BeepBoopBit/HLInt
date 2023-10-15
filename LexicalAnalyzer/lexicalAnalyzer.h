@@ -31,6 +31,7 @@ private:
     bool _isDebug = true;
     std::string _filename;
     std::ifstream _file;
+    std::ofstream _oFile;
     int _line;
     int _column;
     int _state;
@@ -42,6 +43,8 @@ private:
     int _errorCount;
     bool _error;
     bool _isNegativeNumber = false;
+    std::string _totalStringNoSpace = "";
+    bool _isEndedSuccessfully = false;
 
 // Constructors
 public:
@@ -93,6 +96,21 @@ public:
 
         // Open the file
         this->_file.open(filename);
+
+        this->_oFile.open("NOSPACES.txt");
+    }
+
+    ~LexicalAnalyzer(){
+        this->_file.close();
+
+        // Put all the string with no space in the file
+        _oFile << _totalStringNoSpace;
+
+        this->_oFile.close();
+
+        if(_isDebug){
+            std::cout << "Successfuly Close the files";
+        }
     }
 
 // Methods
@@ -112,7 +130,6 @@ public:
         // flags
         bool isDigit = false;
         bool isDouble = false;
-        bool isEndedSuccessfully = false;
         
         // While the file is open
         while(this->_file.is_open()){
@@ -121,11 +138,11 @@ public:
             while(this->_file.good()){
                 
                 // Ensure that the EOF always containts ';'
-                isEndedSuccessfully = false;
+                _isEndedSuccessfully = false;
 
                 // Store the data from the current Character;
                 _file.get(c);
-                
+
                 // If the file is at the end of the file
                 if(_file.eof()){
                     break;
@@ -134,6 +151,8 @@ public:
                 // Check if it's a white space
                 if(c == ' '){
                     continue;
+                }else{
+                    this->_totalStringNoSpace += c;
                 }
                 
                 // Stores the type of the token
@@ -178,7 +197,7 @@ public:
             }
             this->_file.close();
         }
-        if(!isEndedSuccessfully){
+        if(!_isEndedSuccessfully){
             _errorHandler->displayError("Missing Semicolon at the end. Didn't do SyntaxAnalyzer");
             return;
         }
@@ -354,6 +373,7 @@ private:
                     std::cout << "Error at line " << this->_line << " before column" << this->_column << std::endl;
                 }
                 line_token.clear();
+                _isEndedSuccessfully = true;
             }else{
                 line_token.push_back(tokenType);
             }
@@ -390,6 +410,7 @@ private:
                         _errorHandler->displayError("Error at line " + std::to_string(this->_line) + " before column " + std::to_string(this->_column), "LexicalAnalyzer");
                     }
                     line_token.clear();
+                    _isEndedSuccessfully = true;
                 }
                 
                 else{

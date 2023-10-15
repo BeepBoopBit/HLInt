@@ -12,6 +12,10 @@ public:
         lexicalAnalyzer = new LexicalAnalyzer(filename);
     }
 
+    ~HLint(){
+        delete lexicalAnalyzer;
+    }
+
 public:
     void start(){
         lexicalAnalyzer->analyze();
