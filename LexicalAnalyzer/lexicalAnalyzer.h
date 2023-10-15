@@ -329,15 +329,16 @@ private:
 
                 char next = _file.peek();
 
-                // Check if it's a conditional operator
-                processCheckConditionalOperator(c, next, tokenType);
-
                 if(c == ':' && next == '='){
                     tokenType = LanguageToken::AssignmentToken;
                     _file.get(next);
                 }else if(c == '='){
                     tokenType = LanguageToken::InvalidToken;
                 }
+
+                // Check if it's a conditional operator
+                processCheckConditionalOperator(c, next, tokenType);
+
             }
             if(tokenType == LanguageToken::EndOfStatementToken){
                 line_token.push_back(tokenType);
