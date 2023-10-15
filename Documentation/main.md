@@ -37,18 +37,53 @@ Store and maintain information amongst the classes. This include creating, delet
 
 ### LexicalAnalyzer
 
-
+This handles the reading of characters, identifies and categorizes tokens and then displays the identified tokens or reports errors for each token.
 
 #### Constructor
 
-
+* LexicalAnalyzer(std::string filename)
+    * This initializes the object and setting various member variables. This includes the preparation for tokenizing and analyzing the content of a file. 
 
 #### Methods
 
-
+* void analyze()
+    * This reads characters from a file, tokenizes the input by identifying language tokens, categorizes the tokens, and prints the identified tokens.
 
 #### Checkers
 
+ It determines if characters or strings correspond to specific tokens, This includes identifying alphabetic characters, digits, operators, or language keywords.
+
+##### Alphabetic Characters
+
+ * std::map<char, LanguageToken> alphabet
+    * This contains the alphabet fof the language.
+
+* LanguageToken isAlphabet(char c)
+    * This will verify if the character in in the Alphabet.
+
+##### Digits
+
+* std::map<char, LanguageToken> numberAlphabet
+    * This contains the digits of the language. 
+
+*  LanguageToken isDigit(char c)
+    * This will verify the validity of the character as a digit.
+
+##### Operators
+
+* std::map<char, LanguageToken> operatorAlphabet
+    * This contains the used operators of the language.
+
+* LanguageToken isOperator(char c)
+    * This verifies the validity of the character as an operator. 
+
+##### Keywords
+
+* std::map<std::string, LanguageToken> LanguageKeywords
+    * This contains the keywords of the langugae such as (if, integer, and float).
+
+* LanguageToken isKeyword(std::string str)
+    * This verifies the character as a valid keyword.
 
 
 ### ErrorHandler
