@@ -110,6 +110,7 @@ public:
 
         // flags
         bool isDigit = false;
+        bool isDouble = false;
         
         // While the file is open
         while(this->_file.is_open()){
@@ -147,12 +148,18 @@ public:
 
                 // Operator
                 else if((tokenType = this->isOperator(c)) != LanguageToken::InvalidToken){
-                    processOperator(token_value, c, isDigit, line_token, tokenType);
+                    processOperator(token_value, c, isDigit, isDouble, line_token, tokenType);
                 }
 
                 // Identifier
                 else if((tokenType = this->isAlphabet(c)) != LanguageToken::InvalidToken){
                     processIdentifier(token_value, c, isDigit);
+                }
+
+                // Floating point support
+                else if(c == '.'){
+                    token_value += c;
+                    isDouble = true;
                 }
 
                 // Either it's not supported yet, or it's an invalid token.
@@ -269,7 +276,7 @@ private:
         }
     }
     
-    void processOperator(std::string& token_value, char &c, bool &isDigit, std::vector<LanguageToken> &line_token, LanguageToken &tokenType){
+    void processOperator(std::string& token_value, char &c, bool &isDigit, bool& isDouble, std::vector<LanguageToken> &line_token, LanguageToken &tokenType){
         // If it's an operator, this would mean that whatever is on the LHS can be an identifier or a keyword.
         
         // Check if the token_value contains something
@@ -301,8 +308,13 @@ private:
             else{
                 
                 if(isDigit){
+                    if(isDouble){
+                        line_token.push_back(LanguageToken::TypeDoubleToken);
+                    }else{
+                        line_token.push_back(LanguageToken::NumberToken);
+                    }
                     isDigit = false;
-                    line_token.push_back(LanguageToken::NumberToken);
+                    isDouble = false;
                 }else{
                     line_token.push_back(LanguageToken::IdentifierToken);
                 }
