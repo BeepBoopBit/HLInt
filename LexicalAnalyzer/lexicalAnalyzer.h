@@ -41,6 +41,7 @@ private:
     int _tokenCount;
     int _errorCount;
     bool _error;
+    bool _isNegativeNumber = false;
 
 // Constructors
 public:
@@ -309,12 +310,19 @@ private:
                 
                 if(isDigit){
                     if(isDouble){
+                        if(_isNegativeNumber){
+                            _errorHandler->displaySuccess("Is Negative Number (Will support token in SymbolTable)");
+                        }
                         line_token.push_back(LanguageToken::TypeDoubleToken);
                     }else{
+                        if(_isNegativeNumber){
+                            _errorHandler->displaySuccess("Is Negative Number (Will support token in SymbolTable)");
+                        }
                         line_token.push_back(LanguageToken::NumberToken);
                     }
                     isDigit = false;
                     isDouble = false;
+                    _isNegativeNumber = false;
                 }else{
                     line_token.push_back(LanguageToken::IdentifierToken);
                 }
@@ -328,7 +336,7 @@ private:
                     tokenType = LanguageToken::AssignmentToken;
                     _file.get(next);
                 }
-            }
+           }
             if(tokenType == LanguageToken::EndOfStatementToken){
                 line_token.push_back(tokenType);
                 if(!this->_syntaxAnalyzer->analyze(line_token)){
@@ -371,12 +379,37 @@ private:
                         _errorHandler->displayError("Error at line " + std::to_string(this->_line) + " before column " + std::to_string(this->_column), "LexicalAnalyzer");
                     }
                     line_token.clear();
-                }else{
+                }
+                
+                else{
                     line_token.push_back(tokenType);
+                }
+
+                // Probably a negative value
+                if(c == '-'){
+                    processPossibleNegativeNumber(line_token, tokenType);
+                    return;
                 }
             }
         }
         token_value = "";
+    }
+
+    void processPossibleNegativeNumber(std::vector<LanguageToken>& line_token, LanguageToken new_token){
+        LanguageToken token = line_token[line_token.size()-2];
+        if(this->_syntaxAnalyzer->isIdentifierOrLiteral(token)){
+            return;
+        }
+        switch(token){
+            // An Operator
+            case LanguageToken::CloseParenthesisToken:
+                break;
+            // A negative Number
+            default:
+                _isNegativeNumber = true;
+                line_token.pop_back();
+                break;
+        }
     }
 
     void processIdentifier(std::string& token_value, char& c, bool& isDigit){

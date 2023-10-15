@@ -247,7 +247,7 @@ private:
 
 
 // Auxillary Checker
-private:
+public:
     bool isIdentifierOrLiteral(LanguageToken token){
         return token == LanguageToken::IdentifierToken || token == LanguageToken::LiteralToken || token == LanguageToken::NumberToken || token == LanguageToken::StringToken;
     }
