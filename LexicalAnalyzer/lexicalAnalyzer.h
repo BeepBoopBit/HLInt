@@ -112,12 +112,17 @@ public:
         // flags
         bool isDigit = false;
         bool isDouble = false;
+        bool isEndedSuccessfully = false;
         
         // While the file is open
         while(this->_file.is_open()){
 
             // and the file is good
             while(this->_file.good()){
+                
+                // Ensure that the EOF always containts ';'
+                isEndedSuccessfully = false;
+
                 // Store the data from the current Character;
                 _file.get(c);
                 
@@ -173,7 +178,10 @@ public:
             }
             this->_file.close();
         }
-        
+        if(!isEndedSuccessfully){
+            _errorHandler->displayError("Missing Semicolon at the end. Didn't do SyntaxAnalyzer");
+            return;
+        }
         if(_isDebug){
             for(int i = 0; i < line_token.size(); i++){
                 if (line_token[i] == LanguageToken::CharacterToken){
