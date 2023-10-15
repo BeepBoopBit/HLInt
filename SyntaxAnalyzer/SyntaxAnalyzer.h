@@ -181,11 +181,10 @@ private:
         // Position at LeftShift 
         try{
             bool firstRule = line_token[position++] == LanguageDictionary::LeftShiftToken;
-            bool secondRule = isIdentifierOrLiteral(line_token[position++]);
-            bool thirdRule = line_token[position++] == LanguageDictionary::EndOfStatementToken;
-            if(firstRule && secondRule && thirdRule){
-                return true;
+            if(!firstRule){
+                return _errorHandler->error(line_token[position]);
             }
+            return _errorHandler->error(line_token[position], mathematicalExpression(line_token, position));
         }catch(...){
             return _errorHandler->error(line_token[position]);
         }
