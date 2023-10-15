@@ -335,8 +335,10 @@ private:
                 if(c == ':' && next == '='){
                     tokenType = LanguageToken::AssignmentToken;
                     _file.get(next);
+                }else if(c == '='){
+                    tokenType = LanguageToken::InvalidToken;
                 }
-           }
+            }
             if(tokenType == LanguageToken::EndOfStatementToken){
                 line_token.push_back(tokenType);
                 if(!this->_syntaxAnalyzer->analyze(line_token)){
