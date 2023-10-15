@@ -42,6 +42,7 @@ Store and maintain information amongst the classes. This include creating, delet
 #### Constructor
 
 
+
 #### Methods
 
 
@@ -50,10 +51,17 @@ Store and maintain information amongst the classes. This include creating, delet
 
 
 
-
 ### ErrorHandler
 
 This will handle the logging of errors within the program, put it in a file and the console.
+
+### LanguageDictionary
+
+
+
+### SyntaxAnalyzer
+
+
 
 ## Variables
 
@@ -85,6 +93,7 @@ This handles the mathematical operators within the program. This includes the de
 
 * It defines the operators used and how they behave within the program. This includes the assignment, addition, subtraction, multiplication, and division.
     * The process has two classes: ObjectTypeInt (deals with integer values) and ObjectTypeDouble (deals with double values).
+    * Under the following arithmetic operators such as +, -, *, /, the proccess done in (int values) is applied to (double values)  
 
 ###### Assignment
 
@@ -102,12 +111,31 @@ This handles the mathematical operators within the program. This includes the de
 
 ###### Addition
 
-* 
+* int operator+(int value)
+    * This overloads the '+' to add an integer to an object and returning the value.
+
+* int operator+(ObjectTypeInt value)
+    * This overloads the '+' to enable the addition between objects and returns the sum of the value.
 
 ###### Subtraction
 
+* int operator-(int value)
+    * This overloads the '-' to subtract an integer to an object and returning the value.
+
+* int operator-(ObjectTypeInt value)
+    * This overloads the '-' to enable the subtraction between objects and returns the sum of the value.
+
 ###### Multiplication
 
+* int operator*(int value)
+    * This overloads the '*' to multiply an integer to an object and returning the value.
+
+* int operator*(ObjectTypeInt value)
+    * This overloads the '*' to enable the multiplication between objects and returns the sum of the value.
+
 ###### Division
+* int operator/(int value)
+    * This overloads the '/' to divide an integer to an object and returning the value.
 
-
+* int operator/(ObjectTypeInt value)
+    * This overloads the '/' to enable the division between objects and returns the sum of the value.
