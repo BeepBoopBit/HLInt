@@ -39,9 +39,21 @@ Store and maintain information amongst the classes. This include creating, delet
 
 
 
+#### Constructor
+
+
+#### Methods
+
+
+
+#### Checkers
+
+
+
+
 ### ErrorHandler
 
-
+This will handle the logging of errors within the program, put it in a file and the console.
 
 ## Variables
 
@@ -89,6 +101,8 @@ This handles the mathematical operators within the program. This includes the de
     * This overloads the '=' to copy a double value from one object to another.
 
 ###### Addition
+
+* 
 
 ###### Subtraction
 
