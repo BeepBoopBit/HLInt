@@ -45,16 +45,16 @@ public:
     }
     bool analyze(std::vector<LanguageToken> line_token){
         if (line_token[0] == LanguageToken::IdentifierToken){
-            return _errorHandler->lastError(line_token[0],identifier(line_token,0));
+            return _errorHandler->lastError(line_token[0],identifier(line_token,1));
         }
         else if (line_token[0] == LanguageToken::IfToken){
-            return _errorHandler->lastError(line_token[0],oneWayIfCondition(line_token,0));
+            return _errorHandler->lastError(line_token[0],oneWayIfCondition(line_token,1));
         }
         else if(line_token[0] == LanguageDictionary::NumberToken || isOperator(line_token[0])){
-            return _errorHandler->lastError(line_token[0],mathematicalExpression(line_token,0));
+            return _errorHandler->lastError(line_token[0],mathematicalExpression(line_token,1));
         }
         else if(line_token[0] == LanguageDictionary::OutputToken){
-            return _errorHandler->lastError(line_token[0],output(line_token,0));
+            return _errorHandler->lastError(line_token[0],output(line_token,1));
         }else if(line_token[0] == LanguageDictionary::EndOfStatementToken){
             return true;
         }
@@ -64,51 +64,15 @@ public:
     }
 
 private:
-    bool mathematicalExpression(std::vector<LanguageToken> &line_token, int position){
-        // Position at Literal
-        try{
-            if(line_token[position] == LanguageDictionary::EndOfStatementToken){
-                return true;
-            }
-
-            // Give Position at Identifier or Literal
-            bool firstRule = isIdentifierOrLiteral(line_token[position++]);
-
-            if(parenthesisBalancer(line_token[position++])){
-                std::vector<LanguageToken> new_line_token(line_token.begin()+(position), line_token.end());
-                return _errorHandler->error(line_token[position],analyze(new_line_token));
-            }
-
-            // get back to position
-            position--;
-
-            // Give Position at Operator
-            bool secondRule = isOperator(line_token[position++]);
-
-            // Probably a Conditional Statement
-            if(firstRule && !secondRule){
-                // Check if it's a condition
-                if(isConditionalOperator(line_token[--position])){
-                    ++position;
-                    return _errorHandler->error(line_token[position],mathematicalExpression(line_token, position));
-                }
-            }else if(firstRule && secondRule){
-                // Give Position at Identifier or Literal
-                return _errorHandler->error(line_token[position],mathematicalExpression(line_token, position));
-            }else{
-                return _errorHandler->error(line_token[position]);
-            }
-        }catch(...){
-            return _errorHandler->error(line_token[position]);
-        }
-        return _errorHandler->error(line_token[position]);
-    }
+    
     bool identifier(std::vector<LanguageToken> &line_token, int position){
         try{
-            if(line_token[position+1] == LanguageToken::ColonToken){
+            if(line_token[position] == LanguageToken::ColonToken){
+                // Give Position type
                 return _errorHandler->error(line_token[position],declaration(line_token, position+1));
             }
-            else if(line_token[position+1] == LanguageToken::AssignmentToken){
+            else if(line_token[position] == LanguageToken::AssignmentToken){
+                // Give position literal or identifier
                 return _errorHandler->error(line_token[position],assignment(line_token, position+1));
             }
             else{
@@ -119,10 +83,10 @@ private:
         }
     }
     bool declaration(std::vector<LanguageToken> &line_token, int position){
-        // Position at ColonToken
+        // Position at Type
         try{
-            if(line_token[position+1] == LanguageToken::TypeIntegerToken || line_token[position+1] == LanguageToken::TypeDoubleToken){
-                if(line_token[position+2] == LanguageToken::EndOfStatementToken){
+            if(line_token[position] == LanguageToken::TypeIntegerToken || line_token[position] == LanguageToken::TypeDoubleToken){
+                if(line_token[position+1] == LanguageToken::EndOfStatementToken){
                     return true;
                 }
                 else{
@@ -135,63 +99,91 @@ private:
         return false;
     }
     bool assignment(std::vector<LanguageToken> &line_token, int position){
-        // Position at AssignmentToken
+        // Position at Literal or Identifier or a Parenthesis
         try{
-            // Check of Parenthesis
-            parenthesisBalancer(line_token[position++]);
-
-            if(isIdentifierOrLiteral(line_token[position++])){
-                if(line_token[position++] == LanguageToken::EndOfStatementToken){
-                    // Check if Parenthesis is balanced
-                    if (parenthesis_count != 0){
-                        return _errorHandler->error(line_token[position]);
-                    }
-                    _errorHandler->displaySuccess("AssignmentToken");
-                    return true;
-                }
-                else{
-                    if (isOperator(line_token[--position])){
-
-                        // Position given at Operator
-                        return _errorHandler->error(line_token[position],assignment(line_token, position));
-                    }
-                    else{
-                        return _errorHandler->error(line_token[position]);
-                    }
-                }
-            }
+            return _errorHandler->error(line_token[position], mathematicalExpression(line_token, position));
         }catch(...){
             return _errorHandler->error(line_token[position]);
         }
         return false;
     }
     bool oneWayIfCondition(std::vector<LanguageToken> &line_token, int position){
-        // Position at IfToken
+        // Position at Parenthesis
         try{
-            parenthesisBalancer(line_token[(++position)++]);
             
-            if(mathematicalExpression(line_token, position)){
+            // Give Position are literal or identifier or Parenthesis
+            // Check for expression (x+3)
+            // Will balance parenthesis by its own
+            if(mathematicalExpression(line_token, position, true)){
                 // Balance parenthesis
-                if(parenthesisBalancer(line_token[position++]) && parenthesis_count != 0){
+                if(parenthesis_count != 0){
                     return _errorHandler->error(line_token[position]);
                 }
                 return true;
-
             }
         }catch(...){
             return _errorHandler->error(line_token[position]);
         }
         return _errorHandler->error(line_token[position]);
     }
-    bool output(std::vector<LanguageToken> &line_token, int position){
-        // Position at OutputToken
+    bool mathematicalExpression(std::vector<LanguageToken> &line_token, int position, bool conditional = false){
+        // Position at Literal
         try{
-            bool firstRule = line_token[position++] == LanguageDictionary::OutputToken;
-            bool secondRule = line_token[position++] == LanguageDictionary::LeftShiftToken;
-            bool thirdRule = isIdentifierOrLiteral(line_token[position++]);
-            bool fourtRule = line_token[position++] == LanguageDictionary::EndOfStatementToken;
-            if(firstRule && secondRule && thirdRule && fourtRule){
-                _errorHandler->displaySuccess("OutputToken");
+            
+            // is Optional, no need to check.
+            parenthesisBalancer(line_token, position, true);
+
+            // Will always be identifier or literal position
+            bool firstRule = isIdentifierOrLiteral(line_token[position++]);
+
+            if(conditional && isConditionalOperator(line_token[position])){
+                return _errorHandler->error(line_token[position],mathematicalExpression(line_token, position+1,  conditional));
+            }
+
+            // Can be in a form of (3 + 5) + 8
+            // 5 is a literal that can be followed by ONLY closing parenthesis token
+            int lastPosition = position;
+            if(!parenthesisBalancer(line_token, position, false)){
+                _errorHandler->displayError("Bad Parenthesis Rule: Expected Closing Parenthesis (Mathematical Expression)", "SyntaxAnalyzer");
+                return false;
+            }
+
+            if(conditional && position != lastPosition && parenthesis_count == 0){
+                std::vector<LanguageToken> temp_line_token = std::vector<LanguageToken>(line_token.begin()+position, line_token.end());
+                return _errorHandler->error(line_token[position], analyze(temp_line_token));
+            }
+
+            // Will awlays be operator position
+            bool secondRule = isOperator(line_token[position]);
+
+            // A Valid Expression
+            if(firstRule && secondRule){
+                return _errorHandler->error(line_token[position],mathematicalExpression(line_token, position+1, conditional));
+            }
+            
+            // Probably an Error.
+            // Every after an identifier, it 
+            else if(!firstRule && secondRule){
+                return _errorHandler->error(line_token[position]);
+            }
+
+            // EndOfStatement
+            else if(line_token[position] == LanguageToken::EndOfStatementToken){
+                return true;
+            }
+        }catch(...){
+            return _errorHandler->error(line_token[position]);
+        }
+        return _errorHandler->error(line_token[position]);
+    }
+    
+    bool output(std::vector<LanguageToken> &line_token, int position){
+        // Position at LeftShift 
+        try{
+            bool firstRule = line_token[position++] == LanguageDictionary::LeftShiftToken;
+            bool secondRule = isIdentifierOrLiteral(line_token[position++]);
+            bool thirdRule = line_token[position++] == LanguageDictionary::EndOfStatementToken;
+            if(firstRule && secondRule && thirdRule){
                 return true;
             }
         }catch(...){
@@ -200,20 +192,59 @@ private:
         return _errorHandler->error(line_token[position]);
     }
 private:
-    bool parenthesisBalancer(LanguageToken token){
-        if(token == LanguageToken::OpenParenthesisToken){
+    bool parenthesisBalancer(std::vector<LanguageToken> &line_token, int& position, bool open){
+        
+        // will fail if it's not a CloseParenthesisToken
+        if (!open){
+            while(isAuxParenthesis(line_token[position], false)){
+                // Consume all parenthesis
+                ++position;
+            }
+            return true;
+        }
+
+        // Assuumes that the input can be as many parenthesis as possible
+        else{
+            while(isAuxParenthesis(line_token[position], true)){
+                // Consume all parenthesis
+                ++position;
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    bool isAuxParenthesis(LanguageToken& token, bool open){
+        if(open && (token == LanguageToken::OpenParenthesisToken)){
             parenthesis_count += 1;
             return true;
-        }else if(token == LanguageToken::CloseParenthesisToken){
+        }else if(!open && (token == LanguageToken::CloseParenthesisToken)){
             parenthesis_count -= 1;
             if(parenthesis_count < 0){
-                std::cout << "Error, no matching parenthesis. Still trying to Continue (DEBUG)" << std::endl;
+                _errorHandler->displayError("Error, more close parenthesis than open one. (DEBUG) Still Trying to continue", "SyntaxAnalyzer");
                 return true;
             }
             return true;
         }
         return false;
     }
+
+    bool isParenthesis(LanguageToken& token){
+        if(token == LanguageToken::OpenParenthesisToken){
+            parenthesis_count += 1;
+            return true;
+        }else if(token == LanguageToken::CloseParenthesisToken){
+            parenthesis_count -= 1;
+            if(parenthesis_count < 0){
+                _errorHandler->displayError("Error, more close parenthesis than open one. (DEBUG) Still Trying to continue", "SyntaxAnalyzer");
+                return true;
+            }
+            return true;
+        }
+        return false;
+    }
+
 
 // Auxillary Checker
 private:

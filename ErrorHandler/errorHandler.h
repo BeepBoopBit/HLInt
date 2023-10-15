@@ -37,8 +37,11 @@ public:
 
 
 public:
-    bool lastError(LanguageToken, bool state = false){
+    bool lastError(LanguageToken token, bool state = false){
         if (state){
+            if(_isDebug){
+                std::cout << "[SUCCESS] Token: " << LanguageDictionary::getInstance().getTokenName(token) << std::endl;
+            }
             return true;
         }
         std::cout << "#########################ERROR BREAKDOWN#########################"<< std::endl;

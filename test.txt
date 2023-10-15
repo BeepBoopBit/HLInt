@@ -1,3 +1,4 @@
+x:= (x+1)-((3+4) - 5);
 x := 5;
 output << "hello";
 xyz := 1 + 2 + 3 - xyz + 4 - 9;
@@ -10,11 +11,9 @@ if (xyz == 2)
     output << xyz;
 xyz:integer;
 xyz:double;
+
+if (xyz < 10)
 if (xyz < 10 + 20 - 5)
     output << xyz;
 if (xyz != "watermelon ; + , watermelon ")
-    output << xyz;
-if (xyz > "watermelon ; + , watermelon ")
-    output << xyz;
-if (xyz == "watermelon ; + , watermelon ")
     output << xyz;
