@@ -92,7 +92,7 @@ This will handle the logging of errors within the program, put it in a file and 
 
 ### LanguageDictionary
 
-
+* Serves as a data structure. It stores language-related tokens, keywords, and character mappings used for lexical analysis.
 
 ### SyntaxAnalyzer
 
