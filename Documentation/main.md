@@ -73,6 +73,21 @@ This handles the reading of characters, identifies and categorizes tokens and th
 * LanguageToken isKeyword(std::string str)
     * This verifies the character as a valid keyword.
 
+### Auxiliary Functions
+
+* This processes and categorizes language tokens during code analysis. This includes determining token types and handling specific cases and conditions.
+
+* void processDigit(std::string& token_value, char &c, bool &isDigit)
+    * Determines whether the incoming character should be considered part of an identifier or the beginning of a literal number
+
+* void processOperator(std::string& token_value, char &c, bool &isDigit, std::vector<LanguageToken> &line_token, LanguageToken &tokenType)
+    * Handles the processing of operators, categorizes characters as part of identifiers, keywords, or literals, and checks for special cases like conditional operators and quoted strings.
+
+* void processIdentifier(std::string& token_value, char& c, bool& isDigit)
+    * Appends the characters to the token_value while checking if the identifier is valid. Outputs an error if the identifier starts with a number.
+
+* void processCheckConditionalOperator(char &c, char &next, LanguageToken &tokenType)
+    * Checks both the current and following characters if it forms a conditional operator and updates the tokenType.
 
 ### ErrorHandler
 
