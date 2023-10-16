@@ -55,32 +55,20 @@ This handles the reading of characters, identifies and categorizes tokens and th
 
 ##### Alphabetic Characters
 
- * std::map<char, LanguageToken> alphabet
-    * This contains the alphabet fof the language.
-
 * LanguageToken isAlphabet(char c)
     * This will verify if the character in in the Alphabet.
 
 ##### Digits
-
-* std::map<char, LanguageToken> numberAlphabet
-    * This contains the digits of the language. 
 
 *  LanguageToken isDigit(char c)
     * This will verify the validity of the character as a digit.
 
 ##### Operators
 
-* std::map<char, LanguageToken> operatorAlphabet
-    * This contains the used operators of the language.
-
 * LanguageToken isOperator(char c)
     * This verifies the validity of the character as an operator. 
 
 ##### Keywords
-
-* std::map<std::string, LanguageToken> LanguageKeywords
-    * This contains the keywords of the langugae such as (if, integer, and float).
 
 * LanguageToken isKeyword(std::string str)
     * This verifies the character as a valid keyword.
@@ -93,6 +81,27 @@ This will handle the logging of errors within the program, put it in a file and 
 ### LanguageDictionary
 
 * Serves as a data structure. It stores language-related tokens, keywords, and character mappings used for lexical analysis.
+
+#### Alphabetic Characters
+
+* std::map<char, LanguageToken> _alphabet
+    * This contains the alphabet fof the language. This includes the uppercase and lowercase forms, underscore, and numbers.
+
+#### Digits
+
+* std::map<char, LanguageToken> _numberAlphabet
+    * This contains the digits of the language from 0 to 9. 
+
+#### Operators
+
+* std::map<char, LanguageToken> _operatorAlphabet
+    * This contains the used operators of the language such as ('+', '-', ';', ':', '"', '<', '>', '(', ')', '!').
+
+#### Keywords
+
+* std::map<std::string, LanguageToken> _languageKeywords
+    * This contains the keywords of the langugae such as (if, integer, double, and float).
+
 
 ### SyntaxAnalyzer
 
