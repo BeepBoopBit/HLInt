@@ -123,11 +123,12 @@ public:
 // Methods
 public:
 
-    // Note: No negative support yet
-    // Bug: NEed to increase the precendency of assignemnt and declaration operation
     void analyze(){
         while(_file.is_open()){
             while(_file.good()){
+                // Take note if a statement is ended correctly;
+                _isEndedSuccessfully = false;
+
                 // Container of the character
                 char c = ' ';
                 
@@ -169,11 +170,15 @@ public:
                 
                 else if(c == ';'){
                     _ast->insert(LanguageToken::EndOfStatementToken, ";");
+                    _isEndedSuccessfully = true;
                 }
             }
             _file.close();
         }
         _ast->print();
+        if(!_isEndedSuccessfully){
+            std::cout << "Missing Semicolon" << std::endl;
+        }
     }
 
     bool isEndOfStatement(char c){
@@ -279,6 +284,9 @@ private:
         }
 
         if(this->isKeyword(total_value) != LanguageToken::InvalidToken){
+            if(total_value != "if" && !_isEndedSuccessfully){
+                throw std::runtime_error("Missing Semicolon");
+            }
             _ast->insert(this->isKeyword(total_value), total_value);
         }else{
             _ast->insert(LanguageToken::IdentifierToken, total_value);
