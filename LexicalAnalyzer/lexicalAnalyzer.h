@@ -176,9 +176,6 @@ public:
             _file.close();
         }
         _ast->print();
-        if(!_isEndedSuccessfully){
-            std::cout << "Missing Semicolon" << std::endl;
-        }
     }
 
     bool isEndOfStatement(char c){
