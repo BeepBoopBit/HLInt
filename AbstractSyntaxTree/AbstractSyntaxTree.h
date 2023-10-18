@@ -254,20 +254,32 @@ public:
  
 private:
     // Todo: Evaluate the tree base on the parent token
-    bool evaluateTree(AuxillaryTree* tree){
+    bool evaluateTree(AuxillaryTree*& tree){
         if(tree == nullptr){
             return true;
         }
+        std::cout << "[PROCESSING] " << tree->_value << '\n';
+        bool process = processEvaluation(tree);
+        bool lhs = evaluateTree(tree->_left);
+        bool rhs = evaluateTree(tree->_right);
+
+        if(!process || !lhs || !rhs){
+            return false;
+        }
+        return true;
+    }
+
+    bool processEvaluation(AuxillaryTree* &tree){
         bool isCorrect = false;
         switch(tree->_token){
             case LanguageToken::CharacterToken:
             case LanguageToken::IdentifierToken:
             case LanguageToken::NumberToken:
             case LanguageToken::StringToken:
-            case LanguageToken::LiteralToken:
-            case LanguageToken::OutputToken:
             case LanguageToken::NumberIntegerToken:
             case LanguageToken::NumberDoubleToken:
+            case LanguageToken::LiteralToken:
+            case LanguageToken::OutputToken:
                 if(this->expect(tree, &AST::isNull)){
                     isCorrect = true;
                 }
@@ -334,8 +346,7 @@ private:
         if(!isCorrect){
             return false;
         }
-        return evaluateTree(tree->_left);
-        return evaluateTree(tree->_right);
+        return true;
     }
 
     void evaluateTree(){

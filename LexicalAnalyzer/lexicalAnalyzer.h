@@ -48,7 +48,6 @@ private:
     bool _error;
     bool _isNegativeNumber = false;
     std::string _totalStringNoSpace = "";
-    bool _isEndedSuccessfully = false;
 
 // Constructors
 public:
@@ -126,8 +125,6 @@ public:
     void analyze(){
         while(_file.is_open()){
             while(_file.good()){
-                // Take note if a statement is ended correctly;
-                _isEndedSuccessfully = false;
 
                 // Container of the character
                 char c = ' ';
@@ -170,12 +167,15 @@ public:
                 
                 else if(c == ';'){
                     _ast->insert(LanguageToken::EndOfStatementToken, ";");
-                    _isEndedSuccessfully = true;
                 }
+
+                this->_line++;
+                this->_column = 0;
             }
             _file.close();
         }
         _ast->print();
+
     }
 
     bool isEndOfStatement(char c){
@@ -212,6 +212,7 @@ private:
         
         // If it's a digit, then loop until it's not a digit
         while(isDigit){
+            this->_column++;
 
             if(tempC == '.'){
                 if(isAlreadyContainsDot){
@@ -263,6 +264,7 @@ private:
         
         // If it's a digit, then loop until it's not a digit
         while(isIdentifier){
+            this->_column++;
 
             // Append the character to the data_value
             total_value += tempC;
@@ -282,9 +284,6 @@ private:
 
         if(this->isKeyword(total_value) != LanguageToken::InvalidToken){
             char next = _file.peek();
-            if((total_value != "if" && !_isEndedSuccessfully) && (total_value != "if" && next != ';')){
-                throw std::runtime_error("Missing Semicolon");
-            }
             _ast->insert(this->isKeyword(total_value), total_value);
         }else{
             _ast->insert(LanguageToken::IdentifierToken, total_value);
@@ -293,6 +292,7 @@ private:
     }
 
     void processOperator(char c){
+        this->_column++;
 
         //  To Check if It's a double Operator
         char next = _file.peek();
@@ -327,6 +327,7 @@ private:
         _file.get(tempC);
 
         while(tempC != '"'){
+            this->_column++;
             total_value += tempC;
 
             _file.get(tempC);
@@ -383,6 +384,7 @@ private:
             std::cout << str << "\n";
         }
     }
+
 };
 
 #endif // LEXICALANALYZER_H
