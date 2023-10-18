@@ -196,7 +196,7 @@ private:
         char tempC = _file.peek();
 
         // Check if the character is a digit
-        isDigit = this->isDigit(tempC) != LanguageToken::InvalidToken;
+        isDigit = this->isDigit(tempC) != LanguageToken::InvalidToken || tempC == '.';
 
         if(isDigit){
             _file.get(tempC);
@@ -222,7 +222,7 @@ private:
             tempC = _file.peek();
 
             // Check if the character is a digit
-            isDigit = this->isDigit(tempC) != LanguageToken::InvalidToken;
+            isDigit = this->isDigit(tempC) != LanguageToken::InvalidToken || tempC == '.';
             if(!isDigit){
                 break;
             }
