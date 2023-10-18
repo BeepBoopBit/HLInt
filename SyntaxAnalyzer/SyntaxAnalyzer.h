@@ -1,3 +1,9 @@
+/** Note
+ * 
+ * This Codebase is depricated and wouldn't be use further down in the development
+ * 
+*/
+
 #ifndef SYNTAXANALYZER_H
 #define SYNTAXANALYZER_H
 
@@ -5,32 +11,6 @@
 #include <iostream>
 #include "../LanguageDictionary/LanguageDictionary.h"
 #include "../ErrorHandler/ErrorHandler.h"
-
-
-/** Entended Backus-Naur Form for HLint
- *
- * Letter := a | b | c | d | e | f | g | h | i | j | k | l | m | n | o | p | q | r | s | t | u | w | x | y | z
- * Digit := 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
- * WhiteSpace := ' '
- * End-Of-Statement := ';'
- *
- * Character := Letter | Digit 
- * Number := Digit {Digit}
- * Literal := '"' {Character} '"' | Number
- *
- * Identifier := letter, {letter | digit | '_'}, End-Of-Statement
- * Mathematical-Operator := '+' | '-'
- * Mathematical-Expression := Identifier, Mathematical-Operator, Identifier, (Mathematical-Operator, Identifier)*
- *
- * Assignment := Identifier, ':=', (Identifier | Literal | Mathematical-Expression), End-Of-Statement
- * Type := 'integer' | 'float'
- * Declaration := Identifier, ':', Type, End-Of-Statement
- * Output := 'Output', '<<', (Identifier | Literal), End-Of-Statement
- * Condition := (Identifier | Literal), ('<' | '>' | '==' | '!=') , (Identifier | Literal)
- * Statement := Assignment | Declaration | Output
- * One-Way-If-Condition := 'if', '(', Condition, ')', Statement, End-Of-Statement
-**/
-
 
 class SyntaxAnalyzer{
 
