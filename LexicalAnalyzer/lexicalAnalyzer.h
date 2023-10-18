@@ -9,7 +9,6 @@
 
 // Created Classes
 #include "../SymbolTable/symbolTable.h"
-#include "../SyntaxAnalyzer/SyntaxAnalyzer.h"
 #include "../LanguageDictionary/LanguageDictionary.h"
 #include "../ErrorHandler/ErrorHandler.h"
 #include "../AbstractSyntaxTree/AbstractSyntaxTree.h"
@@ -18,9 +17,7 @@ class LexicalAnalyzer{
 
 // Owned Types
 private:
-    //SyntaxAnalyzer* syntaxAnalyzer;
     LanguageDictionary* _languageDictionary;
-    SyntaxAnalyzer* _syntaxAnalyzer;
     ErrorHandler* _errorHandler;
     AST* _ast;
 
@@ -43,7 +40,6 @@ private:
     std::string _tokenType;
     int _tokenLine;
     int _tokenColumn;
-    int _tokenCount;
     int _errorCount;
     bool _error;
     bool _isNegativeNumber = false;
@@ -76,23 +72,14 @@ public:
         // Initialize the token column
         this->_tokenColumn = 0;
 
-        // Initialize the token count
-        this->_tokenCount = 0;
-
         // Initialize the error count
         this->_errorCount = 0;
 
         // Initialize the error
         this->_error = false;
 
-        // Initialize the symbol table
-        //this->symbolTable = new SymbolTable();
-
         // Initialize the language dictionary
         this->_languageDictionary = &LanguageDictionary::getInstance();
-
-        // Initialize the syntax analyzer
-        this->_syntaxAnalyzer = new SyntaxAnalyzer();
 
         // Initialize the error handler
         this->_errorHandler = &ErrorHandler::getInstance();
@@ -147,25 +134,30 @@ public:
 
                 // Can Handle String Literals
                 if(c == '"'){
+                    _totalStringNoSpace += c;
                     processStringLiteral();
                 }
  
                 // Can handle single or double operator
                 else if(isOperator){
+                    _totalStringNoSpace += c;
                     processOperator(c);
                 }
 
                 // Ensure that this will only be called if the token starts with a digit
                 else if(isDigit){
+                    _totalStringNoSpace += c;
                     processDigit(c);
                 }
 
                 // Can Handle Keywords
                 else if(isIdentifier){
+                    _totalStringNoSpace += c;
                     processIdentifier(c);
                 }
                 
                 else if(c == ';'){
+                    _totalStringNoSpace += c;
                     _ast->insert(LanguageToken::EndOfStatementToken, ";");
                 }
 
@@ -225,6 +217,7 @@ private:
 
             // Append the character to the data_value
             total_value += tempC;
+            _totalStringNoSpace += tempC;
 
             tempC = _file.peek();
 
@@ -268,10 +261,12 @@ private:
 
             // Append the character to the data_value
             total_value += tempC;
+            _totalStringNoSpace += tempC;
 
             tempC = _file.peek();
 
             isIdentifier = this->isIdentifier(tempC) != LanguageToken::InvalidToken;
+
             // Check if the character is a digit
             if(!isIdentifier){
                 break;
@@ -314,6 +309,7 @@ private:
             // Insert the double operator
             _ast->insert(this->isOperator(possibleDoubleOperator), possibleDoubleOperator);
             _file.get(c);
+            _totalStringNoSpace += c;
         }
     }
 
@@ -329,6 +325,7 @@ private:
         while(tempC != '"'){
             this->_column++;
             total_value += tempC;
+            _totalStringNoSpace += tempC;
 
             _file.get(tempC);
 
@@ -339,6 +336,7 @@ private:
             }
 
         }
+        _totalStringNoSpace += tempC;
         _ast->insert(LanguageToken::StringToken, total_value);
     }
 
