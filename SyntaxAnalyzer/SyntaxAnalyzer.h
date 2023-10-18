@@ -254,7 +254,7 @@ public:
         return token == LanguageToken::LessThanToken || token == LanguageToken::GreaterThanToken || token == LanguageToken::EqualityToken || token == LanguageToken::NotEqualToken;
     }
     bool isOperator(LanguageToken token){
-        return token == LanguageToken::PlusToken || token == LanguageToken::MinusToken;
+        return token == LanguageToken::AdditionToken|| token == LanguageToken::SubtractionToken;
     }
 };
 

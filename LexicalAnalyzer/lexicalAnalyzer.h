@@ -237,9 +237,9 @@ private:
         }
 
         if(isDouble){
-            _ast->insert(LanguageToken::TypeDoubleToken, total_value);
+            _ast->insert(LanguageToken::NumberDoubleToken, total_value);
         }else{
-            _ast->insert(LanguageToken::TypeIntegerToken, total_value);
+            _ast->insert(LanguageToken::NumberIntegerToken, total_value);
         }
 
     }

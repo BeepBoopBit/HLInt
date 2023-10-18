@@ -164,6 +164,12 @@ public:
             _root = _latestSmallTree;
             _totalityTree.push_back(_latestSmallTree);
             _latestSmallTree = nullptr;
+            if(evaluateTree(_root)){
+                std::cout << "Statement is good" << std::endl;
+            }
+            else{
+                std::cout << "Statement is bad" << std::endl;
+            }
             return;
         }
 
@@ -203,6 +209,7 @@ public:
             printBT(_totalityTree[i]);
             std::cout << "#################### Totality [" << i << "] ####################\n";
         }
+        std::cout << "TESTING" << std::endl;
     }
 
     AuxillaryTree* processOperator(LanguageToken token, std::string value, AuxillaryTree* tree){
@@ -244,8 +251,257 @@ public:
         }
         return tree;
     }
+ 
+private:
+    // Todo: Evaluate the tree base on the parent token
+    bool evaluateTree(AuxillaryTree* tree){
+        if(tree == nullptr){
+            return true;
+        }
+        bool isCorrect = false;
+        switch(tree->_token){
+            case LanguageToken::CharacterToken:
+            case LanguageToken::IdentifierToken:
+            case LanguageToken::NumberToken:
+            case LanguageToken::StringToken:
+            case LanguageToken::LiteralToken:
+            case LanguageToken::OutputToken:
+            case LanguageToken::NumberIntegerToken:
+            case LanguageToken::NumberDoubleToken:
+                if(this->expect(tree, &AST::isNull)){
+                    isCorrect = true;
+                }
+                break;
+            case LanguageToken::AdditionToken:
+            case LanguageToken::SubtractionToken:
+            case LanguageToken::MultiplicationToken:
+            case LanguageToken::AssignmentToken:
+            case LanguageToken::LessThanToken:
+            case LanguageToken::GreaterThanToken:
+            case LanguageToken::EqualityToken:
+            case LanguageToken::NotEqualToken:
+                if(this->expect(tree, &AST::isMathematical)){
+                    isCorrect = true;
+                }
+                break;
+            case LanguageToken::ColonToken:
+                // Consider only the left side of the tree
+                //this->expect(tree, &AST::isIdentifier, 1);
+                if(this->expect(tree, &AST::isIdentifier,1)){
+                    isCorrect = true;
+                }
+                break;
+            case LanguageToken::LeftShiftToken:
+                //this->expect(tree, &AST::isPrintable);
+                if(this->expect(tree, &AST::isKeyword ,&AST::isPrintable)){
+                    isCorrect = true;
+                }
+
+                break;
+            case LanguageToken::IfToken:
+                //this->expect(tree, &AST::isConditional, &AST::isAStatement);
+                if(this->expect(tree, &AST::isConditional, &AST::isAStatement)){
+                    isCorrect = true;
+                }
+                break;
+            case LanguageToken::TypeIntegerToken:
+            case LanguageToken::TypeDoubleToken:
+                // Consider only the left side of the tree
+                //this->expect(tree, &AST::declarable, 1);
+                if(this->expect(tree, &AST::declarable,1)){
+                    isCorrect = true;
+                }
+                break;
+            // Non-Existent or Non-Essential Tokens
+            case LanguageToken::RootNode:
+                std::cout << "[DEBUG] Reach Root Node" << std::endl;
+                break;
+            case LanguageToken::OpenParenthesisToken:
+                throw std::runtime_error("Open Parenthesis should not be in the Tree. Please Check the Lexer");
+                break;
+            case LanguageToken::CloseParenthesisToken:
+                throw std::runtime_error("Close Parenthesis should not be in the Tree. Please Check the Lexer");
+                break;
+            case LanguageToken::QuoteToken:
+                throw std::runtime_error("Quote Token Should not be in the Tree. Please Check the Lexer");
+                break;
+            case LanguageToken::InvalidToken:
+                throw std::runtime_error("Invalid Token");
+                break;
+            default:
+                break;
+        }
+        if(!isCorrect){
+            return false;
+        }
+        return evaluateTree(tree->_left);
+        return evaluateTree(tree->_right);
+    }
+
+    void evaluateTree(){
+        for(int i = 0; i < _totalityTree.size(); ++i){
+            std::cout << "\n#################### Evaluate [" << i << "] ####################\n";
+            evaluateTree(_totalityTree[i]);
+            std::cout << "#################### Evaluate [" << i << "] ####################\n";
+        }
+    }
+
+    bool expect(AuxillaryTree* tree, bool (AST::*function)(AuxillaryTree*), int pathway = 2){
+        if(pathway == 3){
+            if((this->*function)(tree->_left) || (this->*function)(tree->_right)){
+                return true;
+            }
+        }
+        else if(pathway == 2){
+            if((this->*function)(tree->_left) && (this->*function)(tree->_right)){
+                return true;
+            }
+        }else if(pathway == 1){
+            if((this->*function)(tree->_left)){
+                return true;
+            }
+        }else if(pathway == 0){
+            if((this->*function)(tree->_right)){
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    bool expect(AuxillaryTree* tree, bool (AST::*lhs_func)(AuxillaryTree*), bool (AST::*rhs_func)(AuxillaryTree*)){
+        if((this->*lhs_func)(tree->_left) && (this->*rhs_func)(tree->_right)){
+            return true;
+        }
+        return false;
+    }
 
 private:
+    bool isLiteralOrIdentifier(AuxillaryTree* tree){
+        if(tree == nullptr){
+            return false;
+        }
+        bool firstRule = tree->_token == LanguageToken::LiteralToken;
+        bool secondRule = tree->_token == LanguageToken::IdentifierToken;
+        bool thirdRule = tree->_token == LanguageToken::NumberIntegerToken;
+        bool fourthRule = tree->_token == LanguageToken::NumberDoubleToken;
+        if(firstRule || secondRule || thirdRule || fourthRule){
+            return true;
+        }
+        return false;
+    }
+    bool isIdentifier(AuxillaryTree* tree){
+        if(tree == nullptr){
+            return false;
+        }
+        bool firstRule = tree->_token == LanguageToken::IdentifierToken;
+        if(firstRule){
+            return true;
+        }
+        return false;
+    }
+    bool isConditional(AuxillaryTree* tree){
+        if(tree == nullptr){
+            return false;
+        }
+        bool firstRule = tree->_token == LanguageToken::LessThanToken;
+        bool secondRule = tree->_token == LanguageToken::GreaterThanToken;
+        bool thirdRule = tree->_token == LanguageToken::EqualityToken;
+        bool fourthRule = tree->_token == LanguageToken::NotEqualToken;
+        if(firstRule || secondRule || thirdRule || fourthRule){
+            return true;
+        }
+        return false;
+    }
+    bool isAStatement(AuxillaryTree* tree){
+        if(tree == nullptr){
+            return false;
+        }
+        bool firstRule = tree->_token == LanguageToken::AssignmentToken;
+        bool secondRule = tree->_token == LanguageToken::ColonToken;
+        bool thirdRule = tree->_token == LanguageToken::LeftShiftToken;
+        bool fourthRule = tree->_token == LanguageToken::IfToken;
+        if(firstRule || secondRule || thirdRule || fourthRule){
+            return true;
+        }
+        return false;
+    }
+    bool isNull(AuxillaryTree* tree){
+        if(tree == nullptr){
+            return true;
+        }
+        return false;
+    }
+
+    bool isMathematical(AuxillaryTree *tree){
+        if(tree == nullptr){
+            return false;
+        }
+        bool firstRule = tree->_token == LanguageToken::LiteralToken;
+        bool secondRule = tree->_token == LanguageToken::IdentifierToken;
+        bool thirdRule = tree->_token == LanguageToken::NumberIntegerToken;
+        bool fourthRule = tree->_token == LanguageToken::NumberDoubleToken;
+        bool fifthRule = tree->_token == LanguageToken::AdditionToken;
+        bool sixthRule = tree->_token == LanguageToken::SubtractionToken;
+        bool seventhRule = tree->_token == LanguageToken::MultiplicationToken;
+        // We can add Strings
+        bool eightRule= tree->_token == LanguageToken::StringToken;
+        if(firstRule || secondRule || thirdRule || fourthRule || fifthRule || sixthRule || seventhRule || eightRule){
+            return true;
+        }
+        return false;
+    }
+
+    bool isPrintable(AuxillaryTree *tree){
+        if(tree == nullptr){
+            return false;
+        }
+        bool firstRule = isMathematical(tree);
+        bool secondRule = tree->_token == LanguageToken::StringToken;
+        if(firstRule || secondRule){
+            return true;
+        }
+        return false;
+    }
+
+    bool declarable(AuxillaryTree *tree){
+        if(tree == nullptr){
+            return false;
+        }
+
+        bool firstRule = tree->_token == LanguageToken::ColonToken;
+        bool secondRule = tree->_left->_token == LanguageToken::IdentifierToken;
+        if (firstRule && secondRule){
+            return true;
+        }
+        return false;
+    }
+    
+    bool isKeyword(AuxillaryTree* tree){
+        if(tree == nullptr){
+            return false;
+        }
+        bool firstRule = tree->_token == LanguageToken::IfToken;
+        bool secondRule = tree->_token == LanguageToken::OutputToken;
+        if(firstRule || secondRule){
+            return true;
+        }
+        return false;
+    }
+    bool isComparable(AuxillaryTree* tree){
+        if(tree == nullptr){
+            return false;
+        }
+        bool firstRule = isMathematical(tree);
+        bool secondRule = tree->_token == LanguageToken::StringToken;
+        if(firstRule || secondRule){
+            return true;
+        }
+        return false;
+    }
+
+private:
+
     // Reference: https://stackoverflow.com/questions/36802354/print-binary-tree-in-a-pretty-way-using-c
     void printBT(const std::string& prefix, const AuxillaryTree* node, bool isLeft)
     {
