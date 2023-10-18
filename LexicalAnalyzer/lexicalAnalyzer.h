@@ -281,7 +281,8 @@ private:
         }
 
         if(this->isKeyword(total_value) != LanguageToken::InvalidToken){
-            if(total_value != "if" && !_isEndedSuccessfully){
+            char next = _file.peek();
+            if((total_value != "if" && !_isEndedSuccessfully) && (total_value != "if" && next != ';')){
                 throw std::runtime_error("Missing Semicolon");
             }
             _ast->insert(this->isKeyword(total_value), total_value);
