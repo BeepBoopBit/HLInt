@@ -297,6 +297,13 @@ private:
 
         // Check if it's a double operator
         bool isDoubleOperator = this->isOperator(possibleDoubleOperator) != LanguageToken::InvalidToken;
+        bool isDigit = this->isDigit(next) != LanguageToken::InvalidToken;
+
+        // Then it's a negative operator
+        if(isDigit){
+            processDigit(c);
+            return;
+        }
 
         // If it's not a double operator, then append the normal operator
         if(!isDoubleOperator){
