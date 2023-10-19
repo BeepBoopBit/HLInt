@@ -3,6 +3,7 @@
 
 #include "../LanguageDictionary/LanguageDictionary.h"
 #include "../SymbolTable/symbolTable.h"
+#include "../ErrorHandler/ErrorHandler.h"
 #include <vector>
 #include <string>
 #include <iostream>
@@ -41,8 +42,11 @@ public:
     AuxillaryTree* _right = nullptr;
     std::string _value = "";
 
+    int _line = 0;
+    int _column = 0;
+
 public:
-    AuxillaryTree(LanguageToken token, std::string value): _token(token), _value(value){
+    AuxillaryTree(LanguageToken token, std::string value, int line, int column): _token(token), _value(value), _line(line), _column(column){
     }
     ~AuxillaryTree(){}
 };
@@ -54,6 +58,7 @@ class AST{
 
 private:
     using LanguageToken = LanguageDictionary::LanguageToken;
+    ErrorHandler* _errorHandler = &ErrorHandler::getInstance();
 
 // Constructors and Deconstructor
 private:
@@ -84,7 +89,7 @@ private:
     int _parenthesisCount = 0;
 private:
     // Main Tree
-    AuxillaryTree *_root = new AuxillaryTree(LanguageToken::RootNode, "RootNode");
+    AuxillaryTree *_root = new AuxillaryTree(LanguageToken::RootNode, "RootNode",0,0);
 
     // Tree Totality
     std::vector<AuxillaryTree*> _totalityTree;
@@ -98,9 +103,17 @@ private:
 
     bool _isConditional = false;
 
+    int _currentLine = 0;
+    int _currentColumn = 0;
+
 public:
     // Value can be empty
-    void insert(LanguageToken token, std::string value = ""){
+    void insert(LanguageToken token, std::string value = "", int line = 0, int column = 0){
+        
+        // Set the current line and column
+        _currentLine = line;
+        _currentColumn = column;
+
         bool isConditional = false;
         if((token == LanguageToken::OpenParenthesisToken) || (isConditional = isConditionalOperator(value))){
             if(!isConditional){
@@ -108,7 +121,7 @@ public:
             }
 
             if(_latestSmallTree == nullptr && isConditional){
-                _smallTrees.push_back(new AuxillaryTree(token,value));
+                _smallTrees.push_back(new AuxillaryTree(token,value, line, column));
                 return;
             }else if(_latestSmallTree == nullptr){
                 return; 
@@ -121,7 +134,7 @@ public:
             _latestSmallTree = nullptr;
 
             if((_isConditional = isConditional)){
-                _latestSmallTree = new AuxillaryTree(token, value);
+                _latestSmallTree = new AuxillaryTree(token, value, line, column);
                 _smallTrees.push_back(_latestSmallTree);
                 _latestSmallTree = nullptr;
             }
@@ -130,7 +143,8 @@ public:
 
         }else if(token == LanguageToken::CloseParenthesisToken){
             if(--_parenthesisCount < 0){
-                throw std::runtime_error("Parenthesis count is less than 0");
+                _errorHandler->addError("Parenthesis count is less than 0");
+                //throw std::runtime_error("Parenthesis count is less than 0");
             }
 
             if(_smallTrees.empty()){
@@ -197,7 +211,8 @@ public:
         // If the token is end of statement, then we need to merge the small trees and append it to the latest node of the main tree
         if(token == LanguageToken::EndOfStatementToken){
             if(_parenthesisCount != 0){
-                throw std::runtime_error("Parenthesis count is not 0");
+                _errorHandler->addError("Parenthesis count is not 0");
+                //throw std::runtime_error("Parenthesis count is not 0");
             }
             while(!_smallTrees.empty()){
                 AuxillaryTree* tempTree = _smallTrees.back();
@@ -217,7 +232,8 @@ public:
 
                     if(this->isLiteralOrIdentifier(newTempTree)){
                         if((newTempTree = findValidTree(_latestSmallTree)) == nullptr){
-                            throw std::runtime_error("Invalid tree found");
+                            _errorHandler->addError("Invalid tree found");
+                            //throw std::runtime_error("Invalid tree found");
                         }
                         newTempTreeChanged = true;
                     }
@@ -255,7 +271,7 @@ public:
         }
 
         if(_latestSmallTree == nullptr){
-            _latestSmallTree = new AuxillaryTree(token, value);
+            _latestSmallTree = new AuxillaryTree(token, value, line, column);
             return;
         }
  
@@ -270,16 +286,16 @@ public:
         else{
             if(this->isDoubleOperator(_latestSmallTree->_value) || this->isKeyword(_latestSmallTree->_value)){
                 _smallTrees.push_back(_latestSmallTree);
-                _latestSmallTree = new AuxillaryTree(token, value);
+                _latestSmallTree = new AuxillaryTree(token, value, line, column);
             }
             else if(_latestSmallTree->_left == nullptr){
-                _latestSmallTree->_left = new AuxillaryTree(token, value);
+                _latestSmallTree->_left = new AuxillaryTree(token, value, line, column);
             }else{
                 AuxillaryTree *tempTree = _latestSmallTree;
                 while(tempTree->_right != nullptr){
                     tempTree = tempTree->_right;
                 }
-                tempTree->_right = new AuxillaryTree(token, value);
+                tempTree->_right = new AuxillaryTree(token, value, line, column);
             }
         }
     }
@@ -341,7 +357,7 @@ public:
         if((notAnOperator && notAConditional) || isDoubleOperator){
 
             AuxillaryTree* newTree = tree;
-            tree = new  AuxillaryTree(token, value);
+            tree = new  AuxillaryTree(token, value, tree->_line, tree->_column);
             tree->_left = newTree;
             // Create a new tree on the latest small tree base on the latest small tree
             //tree->_left = new AuxillaryTree(tree->_token, tree->_value);
@@ -352,12 +368,12 @@ public:
         }else{
             if(token == LanguageToken::MultiplicationToken){
                 AuxillaryTree* tempTree = tree->_right;
-                AuxillaryTree* newTree = new AuxillaryTree(token, value);
+                AuxillaryTree* newTree = new AuxillaryTree(token, value, tree->_line, tree->_column);
                 newTree->_left = tempTree;
                 tree->_right = newTree;
 
             }else{
-                AuxillaryTree* newTree = new AuxillaryTree(token, value);
+                AuxillaryTree* newTree = new AuxillaryTree(token, value, tree->_line, tree->_column);
                 newTree->_left = tree;
                 tree = newTree;
                 return tree;
@@ -387,7 +403,6 @@ private:
     }
  
 private:
-    // Todo: Evaluate the tree base on the parent token
     bool evaluateTree(AuxillaryTree*& tree){
         if(tree == nullptr){
             return true;
@@ -460,7 +475,7 @@ private:
                 break;
             // Non-Existent or Non-Essential Tokens
             case LanguageToken::EqualToken:
-                throw std::runtime_error("Equal Token is not a valid token.");
+                throw std::runtime_error("Equal Token is not a valid token. Please Check the Lexer");
                 break;
             case LanguageToken::RootNode:
                 std::cout << "[DEBUG] Reach Root Node" << std::endl;
@@ -481,6 +496,7 @@ private:
                 break;
         }
         if(!isCorrect){
+            _errorHandler->addError(tree->_value, tree->_line, tree->_column);
             return false;
         }
         return true;

@@ -57,10 +57,10 @@ public:
         this->_filename = filename;
 
         // Signify the current line
-        this->_line = 1;
+        this->_line = 0;
 
         // Signify the current Column
-        this->_column = 1;
+        this->_column = 0;
 
         // Signify the current state
         this->_state = 0;
@@ -110,7 +110,7 @@ public:
         this->_oFile.close();
 
         if(_isDebug){
-            std::cout << "Successfuly Close the files";
+            std::cout << "[/] Successfuly Close the files\n";
         }
     }
 
@@ -148,6 +148,10 @@ public:
  
                 // Can handle single or double operator
                 else if(isOperator){
+                    if(c == ';'){
+                        this->_line++;
+                        this->_column = 0;
+                    }
                     _totalStringNoSpace += c;
                     processOperator(c);
                 }
@@ -164,16 +168,22 @@ public:
                     processIdentifier(c);
                 }
                 
-                else if(c == ';'){
-                    _totalStringNoSpace += c;
-                    _ast->insert(LanguageToken::EndOfStatementToken, ";");
-                }
-
-                this->_line++;
-                this->_column = 0;
+                //else if(c == ';'){
+                //    this->_line++;
+                //    this->_column = 0;
+                //    _totalStringNoSpace += c;
+                //    _ast->insert(LanguageToken::EndOfStatementToken, ";", _line, _column);
+                //}
             }
             _file.close();
         }
+
+        if(_errorHandler->displayError()){
+            std::cout << "[!] Will not continue to the next phase" << std::endl;
+            std::cout << "[!] Please fix the error(s) above" << std::endl;
+            return;
+        }
+
         //_ast->print();
         auto trees = _ast->getTrees();
         for(auto tree : trees){
@@ -242,11 +252,11 @@ private:
         }
 
         if(isDouble){
-            _ast->insert(LanguageToken::NumberDoubleToken, total_value);
+            _ast->insert(LanguageToken::NumberDoubleToken, total_value, _line, _column);
             _prevToken = LanguageToken::NumberDoubleToken;
             _prevValue = total_value;
         }else{
-            _ast->insert(LanguageToken::NumberIntegerToken, total_value);
+            _ast->insert(LanguageToken::NumberIntegerToken, total_value, _line, _column);
             _prevToken = LanguageToken::NumberIntegerToken;
             _prevValue = total_value;
         }
@@ -293,11 +303,11 @@ private:
         if(this->isKeyword(total_value) != LanguageToken::InvalidToken){
             //char next = _file.peek();
             LanguageToken nextToken = this->isKeyword(total_value);
-            _ast->insert(nextToken, total_value);
+            _ast->insert(nextToken, total_value, _line, _column);
             _prevToken = nextToken;
             _prevValue = total_value;
         }else{
-            _ast->insert(LanguageToken::IdentifierToken, total_value);
+            _ast->insert(LanguageToken::IdentifierToken, total_value, _line, _column);
             _prevToken = LanguageToken::IdentifierToken;
             _prevValue = total_value;
         }
@@ -327,7 +337,7 @@ private:
         if(!isDoubleOperator){
             // Insert the operator
             LanguageToken nextToken = this->isOperator(c);
-            _ast->insert(nextToken, std::string(1,c));
+            _ast->insert(nextToken, std::string(1,c), _line, _column);
             _prevToken = nextToken;
             _prevValue = std::string(1,c);
         }
@@ -336,7 +346,7 @@ private:
         else{
             // Insert the double operator
             LanguageToken nextToken = this->isOperator(possibleDoubleOperator);
-            _ast->insert(nextToken, possibleDoubleOperator);
+            _ast->insert(nextToken, possibleDoubleOperator, _line, _column);
             _prevToken = nextToken;
             _prevValue = possibleDoubleOperator;
             _file.get(c);
@@ -369,7 +379,7 @@ private:
         }
         total_value += "\"";
         _totalStringNoSpace += tempC;
-        _ast->insert(LanguageToken::StringToken, total_value);
+        _ast->insert(LanguageToken::StringToken, total_value, _line, _column);
         _prevToken = LanguageToken::StringToken;
         _prevValue = total_value;
     }
