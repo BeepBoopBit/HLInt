@@ -21,6 +21,7 @@ public:
     }
 private:
     SymbolTable *_symbolTable = &SymbolTable::getInstance();
+    LanguageDictionary* _languageDictionary = &LanguageDictionary::getInstance();
 public:
     void interpret(AuxillaryTree* &tree){
         if(tree == nullptr){
@@ -45,10 +46,14 @@ public:
             case LanguageToken::AdditionToken:
             case LanguageToken::SubtractionToken:
             case LanguageToken::MultiplicationToken:
-                deleteReplaceTree(tree, LanguageToken::NumberToken, getTreeValues(tree));
+                {
+                    std::string value = getTreeValues(tree);
+                    deleteReplaceTree(tree, LanguageToken::NumberToken, value);
+                    evaluateMathematicalExpression(tree);
+                }
                 break;
             case LanguageToken::AssignmentToken:
-                //handleAssignment(tree);
+                handleAssignment(tree);
                 //break;
             case LanguageToken::LeftShiftToken:
                 // LHS will always be the output keyword
@@ -117,8 +122,130 @@ private:
     }
 
     void handleAssignment(AuxillaryTree* &tree){
+        // Tree token is :=
         // LHS will always be an Identifier
         // RHS will always be a mathematical expression
+        
+        AuxillaryTree* lhs = tree->_left;
+        AuxillaryTree* rhs = tree->_right;
+        double realValue = evaluateMathematicalExpression(tree->_right);
+        auto variable = _symbolTable->get(lhs->_value);
+        if(variable->getType() == "integer"){
+            ObjectTypeInt* variableInt = _symbolTable->parseToInt(variable);
+            variableInt->setValue(realValue);
+            this->_symbolTable->set(lhs->_value, variableInt);
+        }else if(variable->getType() == "double"){
+            ObjectTypeDouble* variableDouble = _symbolTable->parseToDouble(variable);
+            variableDouble->setValue(realValue);
+            this->_symbolTable->set(lhs->_value, variableDouble);
+        }else if(variable->getType() == "string"){
+            // Not Handled Correctly
+            ObjectTypeString* variableString = _symbolTable->parseToString(variable);
+            variableString->setValue(std::to_string(realValue));
+            this->_symbolTable->set(lhs->_value, variableString);
+        }
+        std::cout << "[DEBUG] Assigned Variable: " << lhs->_value << std::endl;
+    }
+
+    double evaluateMathematicalExpression(AuxillaryTree* &tree){
+        // Tree token will always be a mathetical expression
+        std::string expression = tree->_value;
+        
+        char c = ' ';
+        std::string token = "";
+        double evaluatedValue = 0.0;
+        
+        // 0 = Addition
+        // 1 = Subtraction
+        // 2 = Multiplication
+        // 3 = Division
+        int typeOfOperation = 0;
+        for(int i = 0; i < expression.length(); ++i){
+            c = expression[i];
+            token += c;
+            if(this->isDigit(token)){
+                char tempC = c;
+                tempC = expression[++i];
+                while(this->isDigit(tempC) || tempC  == '.'){
+                    tempC = expression[i];
+                    token += tempC;
+                    tempC = expression[++i];
+                }
+                if(typeOfOperation == 0){
+                    evaluatedValue += std::stod(token);
+                }else if(typeOfOperation == 1){
+                    evaluatedValue -= std::stod(token);
+                }else if(typeOfOperation == 2){
+                    evaluatedValue *= std::stod(token);
+                }else if(typeOfOperation == 3){
+                    evaluatedValue /= std::stod(token);
+                }
+                --i;
+            }
+            else if(this->isIdentifier(token)){
+                char tempC = c;
+                tempC = expression[++i];
+                while(this->isIdentifier(tempC)){
+                    tempC = expression[i];
+                    token += tempC;
+                    tempC = expression[++i];
+                }
+                --i;
+                auto variable = _symbolTable->get(token);
+                if(variable->getType() == "integer"){
+                    ObjectTypeInt* variableInt = _symbolTable->parseToInt(variable);
+                    if(typeOfOperation == 0){
+                        evaluatedValue += variableInt->getValue();
+                    }else if(typeOfOperation == 1){
+                        evaluatedValue -= variableInt->getValue();
+                    }else if(typeOfOperation == 2){
+                        evaluatedValue *= variableInt->getValue();
+                    }else if(typeOfOperation == 3){
+                        evaluatedValue /= variableInt->getValue();
+                    }
+                }else if(variable->getType() == "double"){
+                    ObjectTypeDouble* variableDouble = _symbolTable->parseToDouble(variable);
+                    if(typeOfOperation == 0){
+                        evaluatedValue += variableDouble->getValue();
+                    }else if(typeOfOperation == 1){
+                        evaluatedValue -= variableDouble->getValue();
+                    }else if(typeOfOperation == 2){
+                        evaluatedValue *= variableDouble->getValue();
+                    }else if(typeOfOperation == 3){
+                        evaluatedValue /= variableDouble->getValue();
+                    }
+                }
+            }else if(token == "+"){
+                typeOfOperation = 0;
+            }else if(token == "-"){
+                typeOfOperation = 1;
+            }else if(token == "*"){
+                typeOfOperation = 2;
+            }else if(token == "/"){
+                typeOfOperation = 3;
+            }
+            token ="";
+        }
+        tree->_value = std::to_string(evaluatedValue);
+        std::cout << "[DEBUG] Evaluated Value: " << evaluatedValue << std::endl;
+        return evaluatedValue;
+    }
+private:
+    bool isDigit(std::string value){
+        auto digits = _languageDictionary->getNumberAlphabet();
+        return digits.find(value[0]) != digits.end();
+    }
+    bool isDigit(char value){
+        auto digits = _languageDictionary->getNumberAlphabet();
+        return digits.find(value) != digits.end();
+    }
+    bool isIdentifier(std::string value){
+        auto alphabet = _languageDictionary->getAlphabet();
+        return alphabet.find(value[0]) !=  alphabet.end();
+    }
+    bool isIdentifier(char value){
+        auto alphabet = _languageDictionary->getAlphabet();
+        return alphabet.find(value) != alphabet.end();
     }
 private:
     LanguageToken getNumberType(AuxillaryTree* &tree){

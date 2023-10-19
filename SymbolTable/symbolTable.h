@@ -50,7 +50,7 @@ public:
         throw std::runtime_error("ERROR: Variable already exists\n");
     }
 
-    ObjectType* getVariable(std::string name){
+    ObjectType* get(std::string name){
         return this->variableTable[name];
     }
 
@@ -76,13 +76,12 @@ public:
     
     
     // Assign the value of the variable
-    void assign(std::string name, ObjectType* variable){
+    void set(std::string name, ObjectType* variable){
         
         // Happens when you assign a variable that doesn't eixsts
         if(!this->isVariable(name)){
             // ERROR: Variable does not exist
-            std::cout << "ERROR: Variable does not exist\n";
-            return;
+            throw std::runtime_error("ERROR: Variable does not exist\n");
         }
         this->variableTable[name] = variable;
     }
@@ -94,12 +93,12 @@ public:
             return;
         }
         // ERROR: Variable does not exist
-        std::cout << "ERROR: Variable does not exist\n";
+        throw std::runtime_error("ERROR: Variable does not exist\n");
     }
 
    
 // Parsing Auxillary Methods
-private:
+public:
     ObjectTypeInt* parseToInt(ObjectType* variable){
         if(variable->getType() == "integer"){
             return (ObjectTypeInt*)variable;
@@ -115,6 +114,15 @@ private:
         }
         // ERROR: Cannot convert to double
         std::cout << "ERROR: Cannot convert to double\n";
+        return nullptr;
+    }
+
+    ObjectTypeString* parseToString(ObjectType *variable){
+        if(variable->getType() == "string"){
+            return (ObjectTypeString*)variable;
+        }
+        // ERROR: Cannot convert to string
+        std::cout << "ERROR: Cannot convert to string\n";
         return nullptr;
     }
 

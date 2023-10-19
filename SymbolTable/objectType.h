@@ -67,6 +67,12 @@ public:
     int getValue(){
         return this->value;
     }
+    void setValue(int value){
+        this->value = value;
+    }
+    void setValue(ObjectTypeInt value){
+        this->value = value.getValue();
+    }
 
 // Operators
 public:
@@ -204,6 +210,12 @@ public:
     double getValue(){
         return this->_value;
     }
+    void setValue(double value){
+        this->_value = value;
+    }
+    void setValue(ObjectTypeDouble value){
+        this->_value = value.getValue();
+    }
 
 public:
     // Assignment
@@ -329,6 +341,12 @@ public:
 public:
     std::string getValue(){
         return this->value;
+    }
+    void setValue(std::string value){
+        this->value = value;
+    }
+    void setValue(ObjectTypeString value){
+        this->value = value.getValue();
     }
 
 // Operators
