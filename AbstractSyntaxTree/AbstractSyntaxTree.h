@@ -342,7 +342,7 @@ private:
             case LanguageToken::ColonToken:
                 // Consider only the left side of the tree
                 //this->expect(tree, &AST::isIdentifier, 1);
-                if(this->expect(tree, &AST::isIdentifier,1)){
+                if(this->expect(tree, &AST::isIdentifier, &AST::isNull)){
                     isCorrect = true;
                 }
                 break;
