@@ -179,7 +179,7 @@ public:
         for(auto tree : trees){
             _interpreter->interpret(tree);
         }
-
+        _ast->print();
     }
 
     bool isEndOfStatement(char c){

@@ -24,7 +24,7 @@ public:
     }
 
 public:
-    void interpret(AuxillaryTree* tree){
+    void interpret(AuxillaryTree* &tree){
         if(tree == nullptr){
             return;
         }
@@ -41,13 +41,13 @@ public:
             case LanguageToken::NumberDoubleToken:
             case LanguageToken::LiteralToken:
             case LanguageToken::OutputToken:
-                // This means that left and right is nulptr
+                // This means that left and right is nullptr 
                 return;
                 break;
             case LanguageToken::AdditionToken:
             case LanguageToken::SubtractionToken:
             case LanguageToken::MultiplicationToken:
-                std::cout << getTreeValues(tree) << std::endl;
+                deleteReplaceTree(tree, LanguageToken::NumberToken, getTreeValues(tree));
                 break;
             case LanguageToken::LeftShiftToken:
             case LanguageToken::AssignmentToken:
@@ -85,6 +85,14 @@ public:
         }
     }
 private:
+    void deleteReplaceTree(AuxillaryTree* &tree, LanguageToken token, std::string value){
+        tree->_token = token;
+        tree->_value = value;
+        delete tree->_left;
+        delete tree->_right;
+        tree->_left = nullptr;
+        tree->_right = nullptr;
+    }
     std::string getTreeValues(AuxillaryTree* &tree){
         if(tree == nullptr){
             return "";

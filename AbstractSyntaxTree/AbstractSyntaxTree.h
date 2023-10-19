@@ -290,7 +290,7 @@ public:
             printBT(_totalityTree[i]);
             std::cout << "#################### Summary [" << i << "] ####################\n";
             std::cout << summarizeTree(_totalityTree[i]) << '\n';
-            std::cout << "#################### End [" << i << "] ####################\n";
+            std::cout << "#################### Summarized [" << i << "] ####################\n";
         }
         std::cout << "TESTING" << std::endl;
     }
