@@ -308,7 +308,7 @@ private:
         bool isDigit = this->isDigit(next) != LanguageToken::InvalidToken;
 
         // Then it's a negative operator
-        if(isDigit && detectIfASign(c)){
+        if((c != ')' && c != '(')&& isDigit && detectIfASign(c)){
             processDigit(c);
             return;
         }

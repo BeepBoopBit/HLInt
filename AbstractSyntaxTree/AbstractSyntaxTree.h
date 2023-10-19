@@ -103,7 +103,9 @@ public:
     void insert(LanguageToken token, std::string value = ""){
         bool isConditional = false;
         if((token == LanguageToken::OpenParenthesisToken) || (isConditional = isConditionalOperator(value))){
-            ++_parenthesisCount;
+            if(!isConditional){
+                ++_parenthesisCount;
+            }
 
             if(_latestSmallTree == nullptr){
                 return; 
