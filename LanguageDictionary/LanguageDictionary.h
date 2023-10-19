@@ -9,31 +9,36 @@ class LanguageDictionary{
 public:
     // Tokens of the Language
     enum LanguageToken{
-        CharacterToken,
-        IdentifierToken,
-        NumberToken,
-        StringToken,
-        WhiteSpaceToken,
-        PlusToken,
-        MinusToken,
-        EndLineToken,
-        AssignmentToken,
-        EndOfStatementToken,
-        ColonToken,
-        InvalidToken,
-        QuoteToken,
-        LeftShiftToken,
-        LessThanToken,
-        GreaterThanToken,
-        EqualityToken,
-        NotEqualToken,
-        IfToken,
-        OpenParenthesisToken,
-        CloseParenthesisToken,
-        LiteralToken,
-        TypeIntegerToken,
-        TypeDoubleToken,
-        OutputToken,
+        CharacterToken,         // Used for Individual Characters (is not use in AST)
+        IdentifierToken,        // Used for Identifiers
+        NumberToken,            // Used for Numbers (is not use in AST)
+        StringToken,            // Used for Strings
+        // WhiteSpaceToken,     // 
+        AdditionToken,          //
+        SubtractionToken,       //
+        // EndLineToken,        //
+        AssignmentToken,        //
+        EndOfStatementToken,    //
+        ColonToken,             //
+        InvalidToken,           //
+        QuoteToken,             //
+        LeftShiftToken,         //
+        LessThanToken,          // 
+        GreaterThanToken,       //
+        EqualityToken,          //
+        NotEqualToken,          //
+        IfToken,                //
+        OpenParenthesisToken,   //
+        CloseParenthesisToken,  //
+        LiteralToken,           //
+        TypeIntegerToken,       //
+        TypeDoubleToken,        //
+        OutputToken,            //
+        RootNode,               //
+        // BranchNode,          //
+        MultiplicationToken,    //
+        NumberIntegerToken,     //
+        NumberDoubleToken,      //
     };
 private:
     LanguageDictionary(){}
@@ -59,14 +64,14 @@ public:
                 return "NumberToken";
             case LanguageToken::StringToken:
                 return "StringToken";
-            case LanguageToken::WhiteSpaceToken:
-                return "WhiteSpaceToken";
-            case LanguageToken::PlusToken:
+            //case LanguageToken::WhiteSpaceToken:
+                //return "WhiteSpaceToken";
+            case LanguageToken::AdditionToken:
                 return "PlusToken";
-            case LanguageToken::MinusToken:
+            case LanguageToken::SubtractionToken:
                 return "MinusToken";
-            case LanguageToken::EndLineToken:
-                return "EndLineToken";
+            //case LanguageToken::EndLineToken:
+                //return "EndLineToken";
             case LanguageToken::AssignmentToken:
                 return "AssignmentToken";
             case LanguageToken::EndOfStatementToken:
@@ -101,6 +106,19 @@ public:
                 return "TypeDoubleToken";
             case LanguageToken::OutputToken:
                 return "OutputToken";
+            case LanguageToken::RootNode:
+                return "RootNode";
+            //case LanguageToken::BranchNode:
+            //    return "BranchNode";
+            //    break;
+            case LanguageToken::MultiplicationToken:
+                return "MultiplicationToken";
+            case LanguageToken::NumberIntegerToken:
+                return "NumberIntegerToken";
+            case LanguageToken::NumberDoubleToken:
+                return "NumberDoubleToken";
+            default:
+                return "InvalidToken";
         }
         return "InvalidToken";
     }
@@ -108,8 +126,12 @@ public:
         return _languageKeywords;
     }
 
-    std::map<char, LanguageToken>& getOperatorAlphabet(){
+    std::map<std::string, LanguageToken>& getOperatorAlphabet(){
         return _operatorAlphabet;
+    }
+
+    std::map<std::string , LanguageToken>& getConditionalOperator(){
+        return _conditionalOperator;
     }
 
     std::map<char, LanguageToken>& getNumberAlphabet(){
@@ -120,6 +142,10 @@ public:
         return _alphabet;
     }
 
+    std::map<std::string, LanguageToken>& getDoubleOperator(){
+        return _doubleOperator;
+    }
+
 private:
     std::map<std::string, LanguageToken> _languageKeywords ={
         {"if", LanguageToken::IfToken},
@@ -128,18 +154,37 @@ private:
         {"output", LanguageToken::OutputToken}
     };
 
-    std::map<char, LanguageToken> _operatorAlphabet ={
-        {'+', LanguageToken::PlusToken},
-        {'-', LanguageToken::MinusToken},
-        {'=', LanguageToken::AssignmentToken},
-        {';', LanguageToken::EndOfStatementToken},
-        {':', LanguageToken::ColonToken},
-        {'"', LanguageToken::QuoteToken},
-        {'<', LanguageToken::LessThanToken},
-        {'>', LanguageToken::GreaterThanToken},
-        {'(', LanguageToken::OpenParenthesisToken},
-        {')', LanguageToken::CloseParenthesisToken},
-        {'!', LanguageToken::NotEqualToken}
+    std::map<std::string, LanguageToken> _operatorAlphabet ={
+        {"+", LanguageToken::AdditionToken},
+        {"-", LanguageToken::SubtractionToken},
+        {"*", LanguageToken::MultiplicationToken},
+        {";", LanguageToken::EndOfStatementToken},
+        {":", LanguageToken::ColonToken},
+        {":=", LanguageToken::AssignmentToken},
+        {"=", LanguageToken::AssignmentToken},
+        {"\"", LanguageToken::QuoteToken},
+        {"(", LanguageToken::OpenParenthesisToken},
+        {")", LanguageToken::CloseParenthesisToken},
+        {"!", LanguageToken::NotEqualToken},
+        {"<", LanguageToken::LessThanToken},
+        {">", LanguageToken::GreaterThanToken},
+        {"==", LanguageToken::EqualityToken},
+        {"!=", LanguageToken::NotEqualToken},
+        {"<<", LanguageToken::LeftShiftToken}
+    };
+
+    std::map<std::string, LanguageToken> _conditionalOperator ={
+        {"<", LanguageToken::LessThanToken},
+        {">", LanguageToken::GreaterThanToken},
+        {"==", LanguageToken::EqualityToken},
+        {"!=", LanguageToken::NotEqualToken}
+    };
+
+    std::map<std::string, LanguageToken> _doubleOperator{
+        {"<<", LanguageToken::LeftShiftToken},
+        {":=", LanguageToken::AssignmentToken},
+        {"==", LanguageToken::EqualityToken},
+        {"!=", LanguageToken::NotEqualToken}
     };
 
     std::map<char, LanguageToken> _numberAlphabet ={
