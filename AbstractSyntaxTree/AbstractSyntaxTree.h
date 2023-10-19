@@ -107,7 +107,10 @@ public:
                 ++_parenthesisCount;
             }
 
-            if(_latestSmallTree == nullptr){
+            if(_latestSmallTree == nullptr && isConditional){
+                _smallTrees.push_back(new AuxillaryTree(token,value));
+                return;
+            }else if(_latestSmallTree == nullptr){
                 return; 
             }
             
@@ -301,7 +304,7 @@ private:
         if(tree == nullptr){
             return true;
         }
-        std::cout << "[PROCESSING] " << tree->_value << '\n';
+        //std::cout << "[PROCESSING] " << tree->_value << '\n';
         bool process = processEvaluation(tree);
         bool lhs = evaluateTree(tree->_left);
         bool rhs = evaluateTree(tree->_right);
