@@ -262,10 +262,10 @@ public:
             _totalityTree.push_back(_latestSmallTree);
             _latestSmallTree = nullptr;
             if(evaluateTree(_root)){
-                std::cout << "Statement is good" << std::endl;
+                //std::cout << "[/] Statement is good" << std::endl;
             }
             else{
-                std::cout << "Statement is bad" << std::endl;
+                //std::cout << "[!] Statement is bad" << std::endl;
             }
             return;
         }

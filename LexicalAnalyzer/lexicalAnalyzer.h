@@ -112,6 +112,7 @@ public:
         if(_isDebug){
             std::cout << "[/] Successfuly Close the files\n";
         }
+        std::cout << "[/] File was Closed with [" << _errorHandler->getErrorCount()<< "] Errors" << std::endl;
     }
 
 // Methods
@@ -188,7 +189,7 @@ public:
         auto trees = _ast->getTrees();
         for(auto tree : trees){
             _interpreter->interpret(tree);
-            std::cout << "Succesfuly Interpreter" << std::endl;
+            //std::cout << "[/] Succesfuly Interpreter" << std::endl;
         }
         //_ast->print();
     }

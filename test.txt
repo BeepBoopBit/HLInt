@@ -1,3 +1,23 @@
-x := + -4.1823;
-x:integer;
-x := 4.123 + 18 output;
+x:double;
+x := 4.123 + 18;
+x := -4.1823;
+x:= (x+1)-((3+4) - 5);
+x := 5;
+output << "hello";
+xyz:integer;
+xyz := 1 + 2 + 3 - xyz + 4 - 9;
+if(20-10==50)
+    output << "Hello";
+xy:integer;
+xy := 3 + 6;
+if (xyz == 2)
+    output << xyz;
+if (xyz < 10 + 20 - 5)
+    output << xyz;
+y: double;
+y:= 5;
+output << x;
+output << y;
+output << xyz;
+output << xy;
+output << x + y;

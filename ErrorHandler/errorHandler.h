@@ -20,6 +20,7 @@ private:
     std::string _errorString = "";
     bool _hasError = false;
     bool _hasAlreadyDisplayed = false;
+    int _errorCount = 0;
 
 private:
     ErrorHandler(){
@@ -77,57 +78,20 @@ public:
     }
 
     void addError(std::string error){
+        _errorCount++;
         _hasError = true;
         _errorString += "[ERROR] " + error + "\n";
     }
 
     void addError(std::string error, int line, int column){
+        _errorCount++;
         _hasError = true;
         _errorString += "[ERROR] " + error +  "at line: " + std::to_string(line) + " column: " + std::to_string(column) + "\n"; 
     }
 
-    void logError();
-    void parentesisError(){
-        _errorString += "[!] Error no matching parenthesis.\n";
-        _debug("Trying to Continue");
+    int getErrorCount(){
+        return _errorCount;
     }
-    void identifierError(){
-        _errorString += "[!] Error in Identifier.\n";
-        _debug("Trying to Continue");
-    }
-    void oneWayIfConditionError(){
-        _errorString += "[!] Error in One-Way If Condition.\n";
-        _debug("Trying to Continue");
-    }
-    void mathematicalExpressionError(){
-        _errorString += "[!] Error in Mathematical Expression.\n";
-        _debug("Trying to Continue");
-    }
-    void outputError(){
-        _errorString += "[!] Error in Output.\n";
-        _debug("Trying to Continue");
-    }
-    void syntaxAnalyzerError(LanguageToken token){
-        _errorString += "[!] Error in Syntax Analyzer. Last token is: " + LanguageDictionary::getInstance().getTokenName(token) + "\n";
-        _debug("Trying to Continue");
-    }
-    void lexicalAnalyzerError(){
-        _errorString += "[!] Error in Lexical Analyzer.\n";
-        _debug("Trying to Continue");
-    }
-    void assignmentError(){
-        _errorString += "[!] Error in Assignment.\n";
-        _debug("Trying to Continue");
-    }
-    void declarationError(){
-        _errorString += "[!] Error in Declaration.\n";
-        _debug("Trying to Continue");
-    }
-    void conditionError(){
-        _errorString += "[!] Error in Condition.\n";
-        _debug("Trying to Continue");
-    }
-
 
 // Debug
 private:
