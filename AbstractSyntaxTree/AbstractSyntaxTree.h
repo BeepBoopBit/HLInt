@@ -2,6 +2,7 @@
 #define ABSTRACTSYNTAXTREE_H
 
 #include "../LanguageDictionary/LanguageDictionary.h"
+#include "../SymbolTable/symbolTable.h"
 #include <vector>
 #include <string>
 #include <iostream>
@@ -46,6 +47,9 @@ public:
     ~AuxillaryTree(){}
 };
 
+
+// ################################################################################################
+
 class AST{
 
 private:
@@ -76,6 +80,7 @@ public:
 // Owned
 private:
     LanguageDictionary* _languageDictionary = &LanguageDictionary::getInstance();;
+    SymbolTable* _symbolTable = &SymbolTable::getInstance();
     int _parenthesisCount = 0;
 private:
     // Main Tree
@@ -119,7 +124,6 @@ public:
             return;
 
         }else if(token == LanguageToken::CloseParenthesisToken){
-            --_parenthesisCount;
             if(--_parenthesisCount < 0){
                 throw std::runtime_error("Parenthesis count is less than 0");
             }
@@ -283,6 +287,10 @@ public:
 
         }
         return tree;
+    }
+private:
+    void appendToSymbolTable(AuxillaryTree* tree){
+
     }
  
 private:
