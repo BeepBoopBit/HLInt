@@ -368,6 +368,9 @@ private:
                 }
                 break;
             // Non-Existent or Non-Essential Tokens
+            case LanguageToken::EqualToken:
+                throw std::runtime_error("Equal Token is not a valid token.");
+                break;
             case LanguageToken::RootNode:
                 std::cout << "[DEBUG] Reach Root Node" << std::endl;
                 break;

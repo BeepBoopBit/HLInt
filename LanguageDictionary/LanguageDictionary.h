@@ -39,6 +39,7 @@ public:
         MultiplicationToken,    //
         NumberIntegerToken,     //
         NumberDoubleToken,      //
+        EqualToken
     };
 private:
     LanguageDictionary(){}
@@ -117,6 +118,8 @@ public:
                 return "NumberIntegerToken";
             case LanguageToken::NumberDoubleToken:
                 return "NumberDoubleToken";
+            case LanguageToken::EqualToken:
+                return "EqualToken";
             default:
                 return "InvalidToken";
         }
@@ -161,7 +164,7 @@ private:
         {";", LanguageToken::EndOfStatementToken},
         {":", LanguageToken::ColonToken},
         {":=", LanguageToken::AssignmentToken},
-        {"=", LanguageToken::AssignmentToken},
+        {"=", LanguageToken::EqualToken},
         {"\"", LanguageToken::QuoteToken},
         {"(", LanguageToken::OpenParenthesisToken},
         {")", LanguageToken::CloseParenthesisToken},
