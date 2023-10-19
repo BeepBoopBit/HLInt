@@ -345,7 +345,7 @@ private:
     }
 
     void processStringLiteral(){
-        std::string total_value = "";
+        std::string total_value = "\"";
 
         // Create a storage for the character
         char tempC = ' ';
@@ -367,6 +367,7 @@ private:
             }
 
         }
+        total_value += "\"";
         _totalStringNoSpace += tempC;
         _ast->insert(LanguageToken::StringToken, total_value);
         _prevToken = LanguageToken::StringToken;

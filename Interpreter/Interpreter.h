@@ -54,11 +54,12 @@ public:
                 break;
             case LanguageToken::AssignmentToken:
                 handleAssignment(tree);
-                //break;
+                break;
             case LanguageToken::LeftShiftToken:
-                // LHS will always be the output keyword
-                // RHS will always be a printable value
-                // Call To Print Values
+                {
+                    handleOutput(tree);
+                    break;
+                }
             case LanguageToken::LessThanToken:
             case LanguageToken::GreaterThanToken:
             case LanguageToken::EqualityToken:
@@ -102,6 +103,39 @@ public:
 
 // This assume that the tree is already evaluated and conforms to the language
 private:
+    void handleOutput(AuxillaryTree* tree){
+        // Tree Token will always be <<
+        // LHS wll always be the output keyword
+        // RHS will always be a printable value
+        
+        AuxillaryTree* rhs = tree->_right;
+        if(rhs->_token == LanguageToken::StringToken){
+            std::string value = rhs->_value;
+            // Remove the quotes
+            value = value.substr(1, value.size() - 2);
+            std::cout << value << std::endl;
+        }else{
+            interpret(rhs);
+            if(rhs->_token == LanguageToken::IdentifierToken){
+                std::string value = rhs->_value;
+                auto variable = _symbolTable->get(value);
+                if(variable->getType() == "integer"){
+                    ObjectTypeInt* variableInt = _symbolTable->parseToInt(variable);
+                    std::cout << variableInt->getValue() << std::endl;
+                }else if(variable->getType() == "double"){
+                    ObjectTypeDouble* variableDouble = _symbolTable->parseToDouble(variable);
+                    std::cout << variableDouble->getValue() << std::endl;
+                }else if(variable->getType() == "string"){
+                    ObjectTypeString* variableString = _symbolTable->parseToString(variable);
+                    std::cout << variableString->getValue() << std::endl;
+                }
+                return;
+            }
+            std::string value = rhs->_value;
+            double realValue = std::stod(value);
+            std::cout << realValue << std::endl;
+        }
+    }
     void handleDeclaration(AuxillaryTree* &tree){
         // Tree Token wil always be its type
         // LHS will always be a colon operator
