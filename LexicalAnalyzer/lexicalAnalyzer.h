@@ -12,6 +12,7 @@
 #include "../LanguageDictionary/LanguageDictionary.h"
 #include "../ErrorHandler/ErrorHandler.h"
 #include "../AbstractSyntaxTree/AbstractSyntaxTree.h"
+#include "../Interpreter/Interpreter.h"
 
 class LexicalAnalyzer{
 
@@ -20,6 +21,7 @@ private:
     LanguageDictionary* _languageDictionary;
     ErrorHandler* _errorHandler;
     AST* _ast;
+    Interpreter* _interpreter;
 
 private:
     
@@ -89,6 +91,9 @@ public:
 
         // Initialize the Abstract Syntax Tree
         this->_ast = &AST::getInstance();
+
+        // Initialize the Interpreter
+        this->_interpreter = &Interpreter::getInstance();
 
         // Open the file
         this->_file.open(filename);
@@ -170,6 +175,10 @@ public:
             _file.close();
         }
         _ast->print();
+        auto trees = _ast->getTrees();
+        for(auto tree : trees){
+            _interpreter->interpret(tree);
+        }
 
     }
 
