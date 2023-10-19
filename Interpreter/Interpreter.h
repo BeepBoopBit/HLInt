@@ -22,13 +22,18 @@ public:
 private:
     SymbolTable *_symbolTable = &SymbolTable::getInstance();
     LanguageDictionary* _languageDictionary = &LanguageDictionary::getInstance();
+
+    // Temporary Support for One Way If
+    bool _inIfScope = false;
 public:
-    void interpret(AuxillaryTree* &tree){
+    void interpret(AuxillaryTree* &tree, bool isInterpretAll = false){
         if(tree == nullptr){
             return;
         }
-        interpret(tree->_right);
-        interpret(tree->_left);
+        if(isInterpretAll){
+            interpret(tree->_right);
+            interpret(tree->_left);
+        }
 
         bool isCorrect = false;
         switch(tree->_token){
@@ -64,14 +69,10 @@ public:
             case LanguageToken::GreaterThanToken:
             case LanguageToken::EqualityToken:
             case LanguageToken::NotEqualToken:
-                // Both LHS and RHS will always be a mathematical expression
-                // Call to Evaluate Conditions
             case LanguageToken::ColonToken:
-                // Pass
+                break;
             case LanguageToken::IfToken:
-                // LHS will always be a condition
-                // RHS will always be a statement
-                // Evaluate Before Passing
+                handleIfCondition(tree);
                 break;
             case LanguageToken::TypeIntegerToken:
             case LanguageToken::TypeDoubleToken:
@@ -97,12 +98,93 @@ public:
             default:
                 break;
         }
-        if(!isCorrect){
-        }
     }
 
 // This assume that the tree is already evaluated and conforms to the language
 private:
+    void handleIfCondition(AuxillaryTree* tree){
+        // LHS will always be a condition
+        // RHS will always be a statement
+        
+        AuxillaryTree* lhs = tree->_left;
+        AuxillaryTree* rhs = tree->_right;
+
+        _inIfScope = true;
+
+        bool isTrue = handleCondition(lhs);
+
+        if(isTrue){
+            //std::cout << "[DEBUG] Condition is true" << std::endl;
+            interpret(rhs, true);
+        }else{
+            //std::cout << "[DEBUG] Condition is false" << std::endl;
+        }
+        _inIfScope = false;
+    }
+
+    bool handleCondition(AuxillaryTree* tree){
+        // LHS will always be a mathematical expression
+        // RHS will always be a mathematical expression
+        // Tree Token will always be a condition token
+
+        AuxillaryTree* lhs = tree->_left;
+        AuxillaryTree* rhs = tree->_right;
+        
+        if(lhs->_token == LanguageToken::StringToken){
+            if(rhs->_token != LanguageToken::StringToken){
+                throw std::runtime_error("Cannot compare string with non-string");
+            }
+            // Then it is a string comparison
+            std::string lhsValue = lhs->_value;
+            std::string rhsValue = rhs->_value;
+            bool isTrue = false;
+            switch(tree->_token){
+                case LanguageToken::LessThanToken:
+                    isTrue = lhsValue < rhsValue;
+                    break;
+                case LanguageToken::GreaterThanToken:
+                    isTrue = lhsValue > rhsValue;
+                    break;
+                case LanguageToken::EqualityToken:
+                    isTrue = lhsValue == rhsValue;
+                    break;
+                case LanguageToken::NotEqualToken:
+                    isTrue = lhsValue != rhsValue;
+                    break;
+                default:
+                    break;
+            }
+            return isTrue;
+        }
+
+        // Then it's an error
+        if(rhs->_token == LanguageToken::StringToken){
+            throw std::runtime_error("Cannot compare string with non-string");
+        }
+
+        interpret(lhs, true);
+        interpret(rhs, true);
+        double lhsValue = evaluateMathematicalExpression(lhs);
+        double rhsValue = evaluateMathematicalExpression(rhs);
+        bool isTrue = false;
+        switch(tree->_token){
+            case LanguageToken::LessThanToken:
+                isTrue = lhsValue < rhsValue;
+                break;
+            case LanguageToken::GreaterThanToken:
+                isTrue = lhsValue > rhsValue;
+                break;
+            case LanguageToken::EqualityToken:
+                isTrue = lhsValue == rhsValue;
+                break;
+            case LanguageToken::NotEqualToken:
+                isTrue = lhsValue != rhsValue;
+                break;
+            default:
+                break;
+        }
+        return isTrue;
+    }
     void handleOutput(AuxillaryTree* tree){
         // Tree Token will always be <<
         // LHS wll always be the output keyword
@@ -115,7 +197,7 @@ private:
             value = value.substr(1, value.size() - 2);
             std::cout << value << std::endl;
         }else{
-            interpret(rhs);
+            interpret(rhs, true);
             if(rhs->_token == LanguageToken::IdentifierToken){
                 std::string value = rhs->_value;
                 auto variable = _symbolTable->get(value);
@@ -144,7 +226,6 @@ private:
 
         AuxillaryTree* lhs = tree->_left;
         AuxillaryTree* lhsLhs = lhs->_left;
-
         if(tree->_token == LanguageToken::TypeIntegerToken){
             ObjectTypeInt* variable = new ObjectTypeInt(lhsLhs->_value, 0);
             _symbolTable->declare(lhsLhs->_value, variable);
@@ -152,7 +233,15 @@ private:
             ObjectTypeDouble* variable = new ObjectTypeDouble(lhsLhs->_value, 0.0);
             _symbolTable->declare(lhsLhs->_value, variable);
         }
-        std::cout << "[DEBUG] Declared Variable: " << lhsLhs->_value << std::endl;
+        //std::cout << "[DEBUG] Declared Variable: " << lhsLhs->_value << std::endl;
+
+        if(_inIfScope){
+            _inIfScope = false;
+            _symbolTable->remove(lhsLhs->_value);
+            //std::cout << "[DEBUG] Removed Variable: " << lhsLhs->_value << std::endl;
+        }
+
+
     }
 
     void handleAssignment(AuxillaryTree* &tree){
@@ -164,6 +253,9 @@ private:
         AuxillaryTree* rhs = tree->_right;
         double realValue = evaluateMathematicalExpression(tree->_right);
         auto variable = _symbolTable->get(lhs->_value);
+        if(variable == nullptr){
+            throw std::runtime_error("Variable not declared");
+        }
         if(variable->getType() == "integer"){
             ObjectTypeInt* variableInt = _symbolTable->parseToInt(variable);
             variableInt->setValue(realValue);
@@ -178,11 +270,12 @@ private:
             variableString->setValue(std::to_string(realValue));
             this->_symbolTable->set(lhs->_value, variableString);
         }
-        std::cout << "[DEBUG] Assigned Variable: " << lhs->_value << std::endl;
+        //std::cout << "[DEBUG] Assigned Variable: " << lhs->_value << std::endl;
     }
 
     double evaluateMathematicalExpression(AuxillaryTree* &tree){
         // Tree token will always be a mathetical expression
+        interpret(tree, true);
         std::string expression = tree->_value;
         
         char c = ' ';
@@ -197,6 +290,9 @@ private:
         for(int i = 0; i < expression.length(); ++i){
             c = expression[i];
             token += c;
+            if(token == "\""){
+                throw std::runtime_error("Cannot perform mathematical operations on strings");
+            }
             if(this->isDigit(token)){
                 char tempC = c;
                 tempC = expression[++i];
@@ -226,6 +322,9 @@ private:
                 }
                 --i;
                 auto variable = _symbolTable->get(token);
+                if(variable == nullptr){
+                    throw std::runtime_error("Missing Variable");
+                }
                 if(variable->getType() == "integer"){
                     ObjectTypeInt* variableInt = _symbolTable->parseToInt(variable);
                     if(typeOfOperation == 0){
@@ -261,7 +360,7 @@ private:
             token ="";
         }
         tree->_value = std::to_string(evaluatedValue);
-        std::cout << "[DEBUG] Evaluated Value: " << evaluatedValue << std::endl;
+        //std::cout << "[DEBUG] Evaluated Value: " << evaluatedValue << std::endl;
         return evaluatedValue;
     }
 private:

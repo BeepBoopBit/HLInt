@@ -174,13 +174,13 @@ public:
             }
             _file.close();
         }
-        _ast->print();
+        //_ast->print();
         auto trees = _ast->getTrees();
         for(auto tree : trees){
             _interpreter->interpret(tree);
             std::cout << "Succesfuly Interpreter" << std::endl;
         }
-        _ast->print();
+        //_ast->print();
     }
 
     bool isEndOfStatement(char c){

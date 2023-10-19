@@ -28,7 +28,7 @@ public:
 class ObjectTypeInt : public ObjectType{
 
 private:
-    int value;
+    int value = 0;
 
 // Constructor
 public:
@@ -177,7 +177,7 @@ public:
 class ObjectTypeDouble : public ObjectType{
 
 private:
-    double _value;
+    double _value = 0;
 public:
     ObjectTypeDouble(std::string name){
         this->name = name;
@@ -314,7 +314,7 @@ public:
 class ObjectTypeString : public ObjectType{
 
 private:
-    std::string value;
+    std::string value = "";
 
 public:
     ObjectTypeString(std::string name){
