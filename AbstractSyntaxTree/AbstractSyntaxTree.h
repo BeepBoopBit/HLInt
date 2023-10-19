@@ -76,6 +76,7 @@ public:
 // Owned
 private:
     LanguageDictionary* _languageDictionary = &LanguageDictionary::getInstance();;
+    int _parenthesisCount = 0;
 private:
     // Main Tree
     AuxillaryTree *_root = new AuxillaryTree(LanguageToken::RootNode, "RootNode");
@@ -97,6 +98,7 @@ public:
     void insert(LanguageToken token, std::string value = ""){
         bool isConditional = false;
         if((token == LanguageToken::OpenParenthesisToken) || (isConditional = isConditionalOperator(value))){
+            ++_parenthesisCount;
 
             if(_latestSmallTree == nullptr){
                 return; 
@@ -117,6 +119,10 @@ public:
             return;
 
         }else if(token == LanguageToken::CloseParenthesisToken){
+            --_parenthesisCount;
+            if(--_parenthesisCount < 0){
+                throw std::runtime_error("Parenthesis count is less than 0");
+            }
 
             if(_smallTrees.empty()){
                 return;
@@ -171,6 +177,9 @@ public:
        
         // If the token is end of statement, then we need to merge the small trees and append it to the latest node of the main tree
         if(token == LanguageToken::EndOfStatementToken){
+            if(_parenthesisCount != 0){
+                throw std::runtime_error("Parenthesis count is not 0");
+            }
             while(!_smallTrees.empty()){
                 AuxillaryTree* tempTree = _smallTrees.back();
                 if(tempTree->_left == nullptr){
