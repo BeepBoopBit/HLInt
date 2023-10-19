@@ -42,6 +42,7 @@ private:
     std::string     _totalStringNoSpace     = "";                           // Total string without space. Use for the output file
     LanguageToken   _prevToken              = LanguageToken::InvalidToken;  // Previous token. Used for Sign Identfication
     std::string     _prevValue              = "";                           // Previous value. Used for Sign Identification
+    bool            _hasEndedSuccessfully   = false;                        // Check if the file has ended successfully with semicolon at the end
 
 // Constructors
 public:
@@ -104,33 +105,42 @@ public:
                 if(c == '"'){
                     _totalStringNoSpace += c;                               // Add the current character to the total string
                     processStringLiteral();                                 // Process the string literal
+                    _hasEndedSuccessfully = false;                          // Set the flag to false
                 }
  
                 // Can handle single or double operator or EndOfStatement Token
                 else if(isOperator){
 
+                    _totalStringNoSpace += c;                               // Add the current character to the total string
+                    processOperator(c);                                     // Process the operator
+                    _hasEndedSuccessfully = false;                          // Set the flag to false
                     // If it's a semicolon
                     if(c == ';'){
                         this->_line++;                                      // Increment the line
                         this->_column = 0;                                  // Reset the column
+                        _hasEndedSuccessfully = true;                          // Set the flag to false
                     }
-                    _totalStringNoSpace += c;                               // Add the current character to the total string
-                    processOperator(c);                                     // Process the operator
                 }
 
                 // Ensure that this will only be called if the token starts with a digit
                 else if(isDigit){
                     _totalStringNoSpace += c;                               // Add the current character to the total string
                     processDigit(c);                                        // Process the digit
+                    _hasEndedSuccessfully = false;                          // Set the flag to false
                 }
 
                 // Can Handle Keywords
                 else if(isIdentifier){
                     _totalStringNoSpace += c;                               // Add the current character to the total string
                     processIdentifier(c);                                   // Process the identifier
+                    _hasEndedSuccessfully = false;                          // Set the flag to false
                 }
             }
             _file.close();
+        }
+
+        if(!_hasEndedSuccessfully){
+            _errorHandler->addError("No semicolon at the end of the file",_line, _column);
         }
 
 #ifdef DEBUG

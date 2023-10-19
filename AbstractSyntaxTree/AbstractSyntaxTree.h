@@ -134,9 +134,13 @@ public:
 
     void evaluateTree(){
         for(int i = 0; i < _totalityTree.size(); ++i){
+#ifdef DEBUG
             std::cout << "\nEvaluate [" << i << "]\n";
+#endif
             if(evaluateTree(_totalityTree[i])){
+#ifdef DEBUG
                 std::cout << "[/] Statement is good" << std::endl;
+#endif
             }
         }
     }
