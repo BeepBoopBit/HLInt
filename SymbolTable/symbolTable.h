@@ -41,13 +41,13 @@ public:
 
 // non-destructive methods
 public:
-    void addVariable(std::string name, ObjectType* variable){
+    void declare(std::string name, ObjectType* variable){
         if(!this->isVariable(name)){
             this->variableTable[name] = variable;
             return;
         }
         // ERROR: Variable already exists
-        std::cout << "ERROR: Variable already exists\n";
+        throw std::runtime_error("ERROR: Variable already exists\n");
     }
 
     ObjectType* getVariable(std::string name){

@@ -178,6 +178,7 @@ public:
         auto trees = _ast->getTrees();
         for(auto tree : trees){
             _interpreter->interpret(tree);
+            std::cout << "Succesfuly Interpreter" << std::endl;
         }
         _ast->print();
     }
