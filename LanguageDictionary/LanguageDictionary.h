@@ -35,8 +35,75 @@ public:
         TypeDoubleToken,
         OutputToken,
     };
+private:
+    LanguageDictionary(){}
+    ~LanguageDictionary(){}
+public:
+    static LanguageDictionary& getInstance(){
+        static LanguageDictionary instance;
+        return instance;
+    }
+
+    // Delete the copy constructor and assignment operator
+    LanguageDictionary(LanguageDictionary const&) = delete;
+    void operator=(LanguageDictionary const&) = delete;
 
 public:
+    std::string getTokenName(LanguageToken token){
+        switch(token){
+            case LanguageToken::CharacterToken:
+                return "CharacterToken";
+            case LanguageToken::IdentifierToken:
+                return "IdentifierToken";
+            case LanguageToken::NumberToken:
+                return "NumberToken";
+            case LanguageToken::StringToken:
+                return "StringToken";
+            case LanguageToken::WhiteSpaceToken:
+                return "WhiteSpaceToken";
+            case LanguageToken::PlusToken:
+                return "PlusToken";
+            case LanguageToken::MinusToken:
+                return "MinusToken";
+            case LanguageToken::EndLineToken:
+                return "EndLineToken";
+            case LanguageToken::AssignmentToken:
+                return "AssignmentToken";
+            case LanguageToken::EndOfStatementToken:
+                return "EndOfStatementToken";
+            case LanguageToken::ColonToken:
+                return "ColonToken";
+            case LanguageToken::InvalidToken:
+                return "InvalidToken";
+            case LanguageToken::QuoteToken:
+                return "QuoteToken";
+            case LanguageToken::LeftShiftToken:
+                return "LeftShiftToken";
+            case LanguageToken::LessThanToken:
+                return "LessThanToken";
+            case LanguageToken::GreaterThanToken:
+                return "GreaterThanToken";
+            case LanguageToken::EqualityToken:
+                return "EqualityToken";
+            case LanguageToken::NotEqualToken:
+                return "NotEqualToken";
+            case LanguageToken::IfToken:
+                return "IfToken";
+            case LanguageToken::OpenParenthesisToken:
+                return "OpenParenthesisToken";
+            case LanguageToken::CloseParenthesisToken:
+                return "CloseParenthesisToken";
+            case LanguageToken::LiteralToken:
+                return "LiteralToken";
+            case LanguageToken::TypeIntegerToken:
+                return "TypeIntegerToken";
+            case LanguageToken::TypeDoubleToken:
+                return "TypeDoubleToken";
+            case LanguageToken::OutputToken:
+                return "OutputToken";
+        }
+        return "InvalidToken";
+    }
     std::map<std::string, LanguageToken>& getLanguageKeywords(){
         return _languageKeywords;
     }

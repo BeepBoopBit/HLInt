@@ -10,6 +10,7 @@
 #include "../SymbolTable/symbolTable.h"
 #include "../SyntaxAnalyzer/SyntaxAnalyzer.h"
 #include "../LanguageDictionary/LanguageDictionary.h"
+#include "../ErrorHandler/ErrorHandler.h"
 
 class LexicalAnalyzer{
 
@@ -18,6 +19,7 @@ private:
     //SyntaxAnalyzer* syntaxAnalyzer;
     LanguageDictionary* _languageDictionary;
     SyntaxAnalyzer* _syntaxAnalyzer;
+    ErrorHandler* _errorHandler;
 
 private:
     
@@ -29,6 +31,7 @@ private:
     bool _isDebug = true;
     std::string _filename;
     std::ifstream _file;
+    std::ofstream _oFile;
     int _line;
     int _column;
     int _state;
@@ -39,6 +42,9 @@ private:
     int _tokenCount;
     int _errorCount;
     bool _error;
+    bool _isNegativeNumber = false;
+    std::string _totalStringNoSpace = "";
+    bool _isEndedSuccessfully = false;
 
 // Constructors
 public:
@@ -80,13 +86,31 @@ public:
         //this->symbolTable = new SymbolTable();
 
         // Initialize the language dictionary
-        this->_languageDictionary = new LanguageDictionary();
+        this->_languageDictionary = &LanguageDictionary::getInstance();
 
         // Initialize the syntax analyzer
         this->_syntaxAnalyzer = new SyntaxAnalyzer();
 
+        // Initialize the error handler
+        this->_errorHandler = &ErrorHandler::getInstance();
+
         // Open the file
         this->_file.open(filename);
+
+        this->_oFile.open("NOSPACES.txt");
+    }
+
+    ~LexicalAnalyzer(){
+        this->_file.close();
+
+        // Put all the string with no space in the file
+        _oFile << _totalStringNoSpace;
+
+        this->_oFile.close();
+
+        if(_isDebug){
+            std::cout << "Successfuly Close the files";
+        }
     }
 
 // Methods
@@ -105,15 +129,20 @@ public:
 
         // flags
         bool isDigit = false;
+        bool isDouble = false;
         
         // While the file is open
         while(this->_file.is_open()){
 
             // and the file is good
             while(this->_file.good()){
+                
+                // Ensure that the EOF always containts ';'
+                _isEndedSuccessfully = false;
+
                 // Store the data from the current Character;
                 _file.get(c);
-                
+
                 // If the file is at the end of the file
                 if(_file.eof()){
                     break;
@@ -122,6 +151,8 @@ public:
                 // Check if it's a white space
                 if(c == ' '){
                     continue;
+                }else{
+                    this->_totalStringNoSpace += c;
                 }
                 
                 // Stores the type of the token
@@ -142,12 +173,18 @@ public:
 
                 // Operator
                 else if((tokenType = this->isOperator(c)) != LanguageToken::InvalidToken){
-                    processOperator(token_value, c, isDigit, line_token, tokenType);
+                    processOperator(token_value, c, isDigit, isDouble, line_token, tokenType);
                 }
 
                 // Identifier
                 else if((tokenType = this->isAlphabet(c)) != LanguageToken::InvalidToken){
                     processIdentifier(token_value, c, isDigit);
+                }
+
+                // Floating point support
+                else if(c == '.'){
+                    token_value += c;
+                    isDouble = true;
                 }
 
                 // Either it's not supported yet, or it's an invalid token.
@@ -160,7 +197,10 @@ public:
             }
             this->_file.close();
         }
-        
+        if(!_isEndedSuccessfully){
+            _errorHandler->displayError("Missing Semicolon at the end. Didn't do SyntaxAnalyzer");
+            return;
+        }
         if(_isDebug){
             for(int i = 0; i < line_token.size(); i++){
                 if (line_token[i] == LanguageToken::CharacterToken){
@@ -264,7 +304,7 @@ private:
         }
     }
     
-    void processOperator(std::string& token_value, char &c, bool &isDigit, std::vector<LanguageToken> &line_token, LanguageToken &tokenType){
+    void processOperator(std::string& token_value, char &c, bool &isDigit, bool& isDouble, std::vector<LanguageToken> &line_token, LanguageToken &tokenType){
         // If it's an operator, this would mean that whatever is on the LHS can be an identifier or a keyword.
         
         // Check if the token_value contains something
@@ -296,21 +336,36 @@ private:
             else{
                 
                 if(isDigit){
+                    if(isDouble){
+                        if(_isNegativeNumber){
+                            _errorHandler->displaySuccess("Is Negative Number (Will support token in SymbolTable)");
+                        }
+                        line_token.push_back(LanguageToken::TypeDoubleToken);
+                    }else{
+                        if(_isNegativeNumber){
+                            _errorHandler->displaySuccess("Is Negative Number (Will support token in SymbolTable)");
+                        }
+                        line_token.push_back(LanguageToken::NumberToken);
+                    }
                     isDigit = false;
-                    line_token.push_back(LanguageToken::NumberToken);
+                    isDouble = false;
+                    _isNegativeNumber = false;
                 }else{
                     line_token.push_back(LanguageToken::IdentifierToken);
                 }
 
                 char next = _file.peek();
 
-                // Check if it's a conditional operator
-                processCheckConditionalOperator(c, next, tokenType);
-
                 if(c == ':' && next == '='){
                     tokenType = LanguageToken::AssignmentToken;
                     _file.get(next);
+                }else if(c == '='){
+                    tokenType = LanguageToken::InvalidToken;
                 }
+
+                // Check if it's a conditional operator
+                processCheckConditionalOperator(c, next, tokenType);
+
             }
             if(tokenType == LanguageToken::EndOfStatementToken){
                 line_token.push_back(tokenType);
@@ -318,6 +373,7 @@ private:
                     std::cout << "Error at line " << this->_line << " before column" << this->_column << std::endl;
                 }
                 line_token.clear();
+                _isEndedSuccessfully = true;
             }else{
                 line_token.push_back(tokenType);
             }
@@ -336,7 +392,7 @@ private:
                 while(this->isOperator(next) != LanguageToken::QuoteToken){
                     tempValue += next;
                     if(_file.eof()){
-                        std::cout << "ERROR: Missing Quote Equivalent" << std::endl;
+                        _errorHandler->displayError("Missing Quote Equivalent", "LexicalAnalyzer");
                         return;
                     }
                     _file.get(next);
@@ -351,20 +407,46 @@ private:
                 if(tokenType == LanguageToken::EndOfStatementToken){
                     line_token.push_back(tokenType);
                     if(!this->_syntaxAnalyzer->analyze(line_token)){
-                        std::cout << "Error at line " << this->_line << " before column " << this->_column << std::endl;
+                        _errorHandler->displayError("Error at line " + std::to_string(this->_line) + " before column " + std::to_string(this->_column), "LexicalAnalyzer");
                     }
                     line_token.clear();
-                }else{
+                    _isEndedSuccessfully = true;
+                }
+                
+                else{
                     line_token.push_back(tokenType);
+                }
+
+                // Probably a negative value
+                if(c == '-'){
+                    processPossibleNegativeNumber(line_token, tokenType);
+                    return;
                 }
             }
         }
         token_value = "";
     }
 
+    void processPossibleNegativeNumber(std::vector<LanguageToken>& line_token, LanguageToken new_token){
+        LanguageToken token = line_token[line_token.size()-2];
+        if(this->_syntaxAnalyzer->isIdentifierOrLiteral(token)){
+            return;
+        }
+        switch(token){
+            // An Operator
+            case LanguageToken::CloseParenthesisToken:
+                break;
+            // A negative Number
+            default:
+                _isNegativeNumber = true;
+                line_token.pop_back();
+                break;
+        }
+    }
+
     void processIdentifier(std::string& token_value, char& c, bool& isDigit){
         if (isDigit){
-            std::cout << "ERROR: You can't start an identifier with a number";
+            _errorHandler->displayError("Error: You can't start an identifier with a number", "LexicalAnalyzer");
         }
         // Add the character to the token_value
         token_value += c;
