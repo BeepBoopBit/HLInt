@@ -241,7 +241,6 @@ private:
             //std::cout << "[DEBUG] Removed Variable: " << lhsLhs->_value << std::endl;
         }
 
-
     }
 
     void handleAssignment(AuxillaryTree* &tree){

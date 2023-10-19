@@ -8,7 +8,7 @@ private:
     LexicalAnalyzer* lexicalAnalyzer;
 
 public:
-    HLint(std::string filename){
+    HLint(std::string filename = "test.txt"){
         lexicalAnalyzer = new LexicalAnalyzer(filename);
     }
 
