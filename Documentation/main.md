@@ -59,54 +59,63 @@ This handles the reading of characters, identifies and categorizes tokens and th
 * `LexicalAnalyzer(std::string filename)`
     * This initializes the object and setting various member variables. This includes the preparation for tokenizing and analyzing the content of a file. 
 
+#### Destructor
+
+* `~LexicalAnalyzer()`
+    * Ensures that open files are properly closed to prevent resource leaks and saves symbol information before the LexicalAnalyzer instance is destroyed.
+
 #### Methods
 
 * `void analyze()`
-    * This reads characters from a file, tokenizes the input by identifying language tokens, categorizes the tokens, and prints the identified tokens.
+    * This reads characters from a file, tokenizes the input by identifying language tokens, categorizes these tokens, and manages their processing.  
+
+* `bool isEndOfStatement(char c)`
+    * Checks if a given character is a semicolon.
+
+* `void processDigit(char c)`
+    * Reads characters from a file that starts with a digit. It checks if the sequence represents either integer or double and adds the corresponding token to a data structure.
+
+* `void processIdentifier(char c)`
+    * Reads characters from a file to form an identifier. Checks if it's a keyword, and assigns the corresponding token or labels it as a general "IdentifierToken" if it's the latter.
+
+* `void processOperator(char c)`
+    * Processes operators, which can be either single or double operators, and inserts them into the Abstract Syntax Tree.
+
+* `void processStringLiteral()`
+    * Extracts and tokenizes a string literal enclosed in double quotation marks from the input code, adding it to the Abstract Syntax Tree.
 
 #### Checkers
 
  It determines if characters or strings correspond to specific tokens, This includes identifying alphabetic characters, digits, operators, or language keywords.
 
-##### Alphabetic Characters
+##### Method
 
-* `LanguageToken isAlphabet(char c)`
-    * This will verify if the character in in the Alphabet.
+* `bool detectIfASign(char c)`
+    * Determines if a character is a valid operator based on context and the previous token in the language.
 
-##### Digits
+* `LanguageToken isIdentifier(char c)`
+    * Checks whether a given character is a valid identifier character.
 
 *  `LanguageToken isDigit(char c)`
-    * This will verify the validity of the character as a digit.
-
-##### Operators
+    * Checks whether a given character is a valid digit character.
 
 * `LanguageToken isOperator(char c)`
-    * This verifies the validity of the character as an operator. 
+    * Checks whether a given character is a valid operator.
 
-##### Keywords
+* `LanguageToken isOperator(std::string str)`
+    * Checks whether a given string is a valid operator.
 
 * `LanguageToken isKeyword(std::string str)`
-    * This verifies the character as a valid keyword.
+    * Checks if a given string is a language keyword by basing it in the language's keyword dictionary.
 
-### Auxiliary Functions
+* `bool isInFileGood()`
+    * Checks if a file is successfully opened and prints a message indicating success or failure.
 
-* This processes and categorizes language tokens during code analysis. This includes determining token types and handling specific cases and conditions.
+* `bool isOutFileGood()`
+    * Checks if the output file is open. Verifes if the output file is accessible and open for writing.
 
-* `void processDigit(std::string& token_value, char &c, bool &isDigit)`
-    * Determines whether the incoming character should be considered part of an identifier or the beginning of a literal number
-
-* `void processOperator(std::string& token_value, char &c, bool &isDigit, std::vector<LanguageToken> &line_token, LanguageToken &tokenType)`
-    * Handles the processing of operators, categorizes characters as part of identifiers, keywords, or literals, and checks conditional operators and quoted strings.
-
-* `void processIdentifier(std::string& token_value, char& c, bool& isDigit)`
-    * Appends the characters to the token_value while checking if the identifier is valid. Outputs an error if the identifier starts with a number.
-
-* `void processCheckConditionalOperator(char &c, char &next, LanguageToken &tokenType)`
-    * Checks both the current and following characters if it forms a conditional operator and updates the tokenType.
-
-
-
-
+* `void closeFiles(int fileIndex, std::string filename)`
+    * It can close either the input or output file based on the provided fileIndex. This also includes an optional debug messages.
 
 
 ### ErrorHandler
@@ -158,9 +167,6 @@ This will handle the logging of errors within the program, put it in a file and 
     * Adds a debug message to the error log when debugging is active.
 
 
-
-
-
 ### LanguageDictionary
 
 Serves as a data structure. It stores language-related tokens, keywords, and character mappings used for lexical analysis.
@@ -175,64 +181,59 @@ Serves as a data structure. It stores language-related tokens, keywords, and cha
 
 #### Methods
 
-* static LanguageDictionary& getInstance()
+* `static LanguageDictionary& getInstance()`
     * Ensures that there is only one instance of the LanguageDictionary class.
 
-* std::string getTokenName(LanguageToken token)
+* `std::string getTokenName(LanguageToken token)`
     * Returns the name of a language token as a string, to easily identify tokens.
 
-* std::map<std::string, LanguageToken>& getLanguageKeywords()
+* `std::map<std::string, LanguageToken>& getLanguageKeywords()`
     * Provieds access and returns a map of language keywords.
 
-* std::map<std::string, LanguageToken>& getOperatorAlphabet()
+* `std::map<std::string, LanguageToken>& getOperatorAlphabet()`
     *  Provides access to and returns a map that associates operator strings.
 
-* std::map<std::string , LanguageToken>& getConditionalOperator()
+* `std::map<std::string , LanguageToken>& getConditionalOperator()`
     * Provides access and returns a map with conditional operators.
 
-* std::map<char, LanguageToken>& getNumberAlphabet()
+* `std::map<char, LanguageToken>& getNumberAlphabet()`
     * Provides access to and returns a map. This includes individual digits (0-9).
 
-* std::map<char, LanguageToken>& getAlphabet()
+* `std::map<char, LanguageToken>& getAlphabet()`
     * Provides access to and returns a map including the alphanumeric characters (letters, digits, and underscore).
 
-* std::map<std::string, LanguageToken>& getDoubleOperator()
+* `std::map<std::string, LanguageToken>& getDoubleOperator()`
     * Provides access to and returns a map with Double Operators.
 
 #### Alphabetic Characters
 
-* std::map<char, LanguageToken> _alphabet
+* `std::map<char, LanguageToken> _alphabet`
     * This contains the alphabet fof the language. This includes the uppercase and lowercase forms, underscore, and numbers.
 
 #### Digits
 
-* std::map<char, LanguageToken> _numberAlphabet
+* s`td::map<char, LanguageToken> _numberAlphabet`
     * This contains the digits of the language from 0 to 9. 
 
 #### Operator Alphabet
 
-* std::map<char, LanguageToken> _operatorAlphabet
+* `std::map<char, LanguageToken> _operatorAlphabet`
     * This contains the used operators of the language such as ('+', '-', '*', ';', ':', ':=', '=', '\', '==', '!=', '<<', '<', '>', '(', ')', '!').
 
 #### Conditional Operators
 
-* std::map<std::string, LanguageToken> _conditionalOperator
+* `std::map<std::string, LanguageToken> _conditionalOperator`
     * This contains the operators used for conditional statements. This includes the ('<', '>', '==', '!=').
 
 #### Double Operators
 
-* std::map<std::string, LanguageToken> _doubleOperator
+* `std::map<std::string, LanguageToken> _doubleOperator`
     * This contains the double-character operators. This includes the ('<<', ':=', '==', '!=').
 
 #### Keywords
 
-* std::map<std::string, LanguageToken> _languageKeywords
+* `std::map<std::string, LanguageToken> _languageKeywords`
     * This contains the keywords of the langugae such as (if, integer, double, and output).
-
-
-
-
-
 
 
 ### SyntaxAnalyzer
@@ -241,57 +242,55 @@ It performs syntax analysis on lines of code. This includes detecting, ensuring 
 
 #### Constructor
 
-* SyntaxAnalyzer()
+* `SyntaxAnalyzer()`
     * This initialized the SyntaxAnalyzer by setting some initial state variables and obtaining an instance of the ErrorHandler class.
 
 #### Methods
 
-* bool analyze(std::vector<LanguageToken> line_token)
+* `bool analyze(std::vector<LanguageToken> line_token)`
     * Examines the first token in a sequence, delegates analysis and error handling to other methods based on the token's type, and returns the results.
 
-* bool identifier(std::vector<LanguageToken> &line_token, int position)
+* `bool identifier(std::vector<LanguageToken> &line_token, int position)`
     * Analyzes a sequence of language tokens, checks the type of the token, and either continues the analysis by calling related methods or reports errors.
 
-* bool declaration(std::vector<LanguageToken> &line_token, int position)
+* `bool declaration(std::vector<LanguageToken> &line_token, int position)`
     * Examines language tokens, checks the validuty of token as a varibale type declaration, and reports errors.
 
-* bool assignment(std::vector<LanguageToken> &line_token, int position)
+* `bool assignment(std::vector<LanguageToken> &line_token, int position)`
     * Analyzes the assignment operators, checks the validty, and reports errors.
 
-*  bool oneWayIfCondition(std::vector<LanguageToken> &line_token, int position)
+*  `bool oneWayIfCondition(std::vector<LanguageToken> &line_token, int position)`
     * Analyzes one-way if conditions, validates it by checking the formatting of conditions, and reports errors.
 
-*  bool mathematicalExpression(std::vector<LanguageToken> &line_token, int position, bool conditional = false)
+*  `bool mathematicalExpression(std::vector<LanguageToken> &line_token, int position, bool conditional = false)`
     * Examines and validates mathematical expressions by ensuring correct syntaxes. This handles the identifiers, literals, operators, and reports errors.
 
-* bool output(std::vector<LanguageToken> &line_token, int position)
+* `bool output(std::vector<LanguageToken> &line_token, int position)`
     * Analyzes and checks the validity of output statements. This includes the LeftShiftToken, valid mathematical expression, and reports errors.  
 
-* bool parenthesisBalancer(std::vector<LanguageToken> &line_token, int& position, bool open)
+* `bool parenthesisBalancer(std::vector<LanguageToken> &line_token, int& position, bool open)`
     * This verifies that open and close parentheses are balanced. 
 
-* bool isAuxParenthesis(LanguageToken& token, bool open)
+* `bool isAuxParenthesis(LanguageToken& token, bool open)`
     * Used within parenthesisBalancer(), verifies if a LanguageToken is an open or close parenthesis, balances and reports error.
 
-* bool isParenthesis(LanguageToken& token)
+* `bool isParenthesis(LanguageToken& token)`
     * Checks and counts all parentheses, reporting an error for unbalanced parentheses.
 
 #### Auxiliary Checker
 
-* bool isIdentifierOrLiteral(LanguageToken token)
+* `bool isIdentifierOrLiteral(LanguageToken token)`
     * Checks if the LanguageToken is an identifier, literal, number, or string and returns true if it matches.
 
-* bool isConditionalOperator(LanguageToken token)
+* `bool isConditionalOperator(LanguageToken token)`
     * Checks if the LanguageToken is a conditional operator. This includes ('>', '<', '==', '!='), and returns true if the token matches.
 
-* bool isOperator(LanguageToken token)
+* `bool isOperator(LanguageToken token)`
     * Checks if the LanguageToken is an operator. This includes ('+' and '-') and returns true if the token matches.
 
 
-
-
-
 ### AbstractSyntaxTree
+
 
 
 ### Interpreter
@@ -304,20 +303,6 @@ It performs syntax analysis on lines of code. This includes detecting, ensuring 
 
 * `std::map<std::string, ObjectType*> variableTable;`
     * Contains all information about variables that is being used in the program.
-
-* ``
-    * 
-
-* ``
-    * 
-
-* ``
-    * 
-
-
-
-
-
 
 #### Auxillary Class: ObjectType
 
@@ -348,6 +333,15 @@ Provides a basic framework for handling mathematical operators, data type declar
 * `operator double()`
     * Defines a conversion operator that converts an object into a double. This returns a double value.
 
+* `operator int()`
+    * This is under the ObjectTypeDouble class. Turns an object into a regular whole number by removing its decimal part.
+
+* `operator double()`
+    * This is under the ObjectTypeDouble class. It essentially does the same, it starts with a double value and returns the same.  
+
+* `operator std::string()`
+    * Transform an object of the String class into a regular string.
+
 ##### Methods
 
 * `std::string getName()`
@@ -368,8 +362,8 @@ Provides a basic framework for handling mathematical operators, data type declar
 ##### Operators
 
 * It defines the operators used and how they behave within the program. This includes the assignment, addition, subtraction, multiplication, and division.
-    * The process has two classes: ObjectTypeInt (deals with integer values) and ObjectTypeDouble (deals with double values).
-    * Under the following arithmetic operators such as +, -, *, /, the proccess done in (int values) is applied to (double values)  
+    * The process has three classes: ObjectTypeInt (deals with integer values), ObjectTypeDouble (deals with double values) and ObjectTypeString (deals with srting values).
+    * Under the following arithmetic operators such as +, -, *, /, the proccess done in (int values) is applied to both (double values) and (string values). 
 
 ###### Assignment
 
@@ -385,6 +379,12 @@ Provides a basic framework for handling mathematical operators, data type declar
 * `ObjectTypeDouble operator=(ObjectTypeDouble value)`
     * This overloads the '=' to copy a double value from one object to another.
 
+* `ObjectTypeString operator=(std::string value)`
+    * This overloads the '=' to assign a string value.
+
+* `ObjectTypeString operator=(ObjectTypeString value)`
+    * This overloads the '=' to copy a string value from one object to another.
+
 ###### Addition
 
 * `ObjectTypeInt operator+(int value)`
@@ -395,25 +395,25 @@ Provides a basic framework for handling mathematical operators, data type declar
 
 ###### Subtraction
 
-* `int operator-(int value)`
+* `ObjectTypeInt operator-(int value)`
     * This overloads the '-' operator to subtract an integer from an object and returns the value.
 
-* `int operator-(ObjectTypeInt value)`
+* `ObjectTypeInt operator-(ObjectTypeInt value)`
     * This overloads the '-' operator to enable subtraction between objects and returns the difference of the value.
 
 ###### Multiplication
 
-* `int operator*(int value)`
+* `ObjectTypeInt operator*(int value)`
     * This overloads the '*' operator to multiply an object by an integer and returns the value.
 
-* `int operator*(ObjectTypeInt value)`
+* `ObjectTypeInt operator*(ObjectTypeInt value)`
     * This overloads the '*' operator to enable multiplication between objects and returns the product value.
 
 ###### Division
-* `int operator/(int value)`
+* `ObjectTypeInt operator/(int value)`
     * This overloads the '/' operator to divide an object by an integer. It includes error handling for division by zero.
 
-* `int operator/(ObjectTypeInt value)`
+* `ObjectTypeInt operator/(ObjectTypeInt value)`
     * This overloads the '/' to enable the division between objects and returns the quotient of the value.
 
 ##### Comparisons
