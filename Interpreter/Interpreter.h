@@ -250,9 +250,6 @@ private:
         AuxillaryTree* rhs = tree->_right;
         double realValue = evaluateMathematicalExpression(tree->_right);
         auto variable = _symbolTable->get(lhs->_value);
-        if(variable == nullptr){
-            throw std::runtime_error("Variable not declared");
-        }
         if(variable->getType() == "integer"){
             ObjectTypeInt* variableInt = _symbolTable->parseToInt(variable);
             variableInt->setValue(realValue);
@@ -318,9 +315,6 @@ private:
                 }
                 --i;
                 auto variable = _symbolTable->get(token);
-                if(variable == nullptr){
-                    throw std::runtime_error("Missing Variable");
-                }
                 if(variable->getType() == "integer"){
                     ObjectTypeInt* variableInt = _symbolTable->parseToInt(variable);
                     if(typeOfOperation == 0){

@@ -2,5 +2,7 @@ x: integer;
 y: double;
 x := 1 + 2 + 3;
 y := x + 2;
+if (x < y) 
+    output << z;
 output<< x + y + 5;
-output << "watermelon"
+output << "watermelon";

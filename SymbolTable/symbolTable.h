@@ -51,7 +51,11 @@ public:
     }
 
     ObjectType* get(std::string name){
-        return this->variableTable[name];
+        auto value = this->variableTable.find(name) != this->variableTable.end() ? this->variableTable[name] : nullptr;
+        if(value == nullptr){
+            throw std::runtime_error("Variable is not Declared");
+        }
+        return value;
     }
 
     std::vector<std::string> getVariableNames(){
