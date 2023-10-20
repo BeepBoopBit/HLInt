@@ -122,6 +122,15 @@ This will handle the logging of errors within the program, put it in a file and 
 
 
 
+#### Auxiliary Checker
+
+
+
+### AbstractSyntaxTree
+
+
+
+
 ## Variables
 
 * std::map<std::string, ObjectType*> variableTable;
