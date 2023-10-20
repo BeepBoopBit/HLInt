@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <fstream>
 
 #include "objectType.h"
 
@@ -20,11 +21,16 @@ private:
     // Store the list of variables
     std::map<std::string, ObjectType*> variableTable;
 
+    std::string _filename = "RES_SYM.txt";
+    std::ofstream _file;
+
 private:
     SymbolTable(){
         // Initialize the symbol table
         this->variableTable = std::map<std::string, ObjectType*>();
     }
+
+    ~SymbolTable(){}
 
 public:
 
@@ -129,6 +135,33 @@ public:
         std::cout << "ERROR: Cannot convert to string\n";
         return nullptr;
     }
+
+private:
+    void writeToFile(){
+        this->_file.open(this->_filename);
+        std::string tempData = "";
+        for(std::map<std::string, ObjectType*>::iterator it = this->variableTable.begin(); it != this->variableTable.end(); it++){
+            if (it->second->getType() == "integer"){
+                ObjectTypeInt* variable = (ObjectTypeInt*)it->second;
+                tempData += variable->getType() + ": " + it->first + " = " + std::to_string(variable->getValue()) +  '\n';
+            }else if(it->second->getType() == "double"){
+                ObjectTypeDouble* variable = (ObjectTypeDouble*)it->second;
+                tempData += variable->getType() + ": "+ it->first + " = " + std::to_string(variable->getValue()) + '\n';
+            }
+        }
+        this->_file << tempData;
+        this->_file.close();
+    }
+
+// Others
+public:
+void saveToFile(){
+    // Write the symbol table to a file
+    writeToFile();
+#ifdef DEBUG
+    std::cout << "[/] Successfuly Closed the file [" << this->_filename << "]" << std::endl;
+#endif
+}
 
 // Debug
 public:
