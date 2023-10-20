@@ -89,7 +89,7 @@ public:
                 _file.get(c);
                 
                 if(_file.eof()){
-                    return;
+                    break;
                 }
 
                 // Peek the next character
