@@ -16,7 +16,7 @@ Interface for the whole interpreter.
 #### Methods
 
 * start()
-    * Start the Interpreter.
+    * Starts the Interpreter.
 
 
 ### SymbolTable
@@ -27,6 +27,7 @@ Store and maintain information amongst the classes. This include creating, delet
 
 * SymbolTable()
     * Private Constructor to deploy a singleton class.
+
 * SymbolTable(SymbolTable const&)
     * Private Copy Constructor to avoid multiple copy of the class.
 
@@ -97,6 +98,37 @@ This will handle the logging of errors within the program, put it in a file and 
 
 Serves as a data structure. It stores language-related tokens, keywords, and character mappings used for lexical analysis.
 
+#### Constructors
+
+* LanguageDictionary()
+    * Private Constructor to deploy a singleton class.
+
+#### Methods
+
+* static LanguageDictionary& getInstance()
+    * Ensures that there is only one instance of the LanguageDictionary class.
+
+* std::string getTokenName(LanguageToken token)
+    * Returns the name of a language token as a string, to easily identify tokens.
+
+* std::map<std::string, LanguageToken>& getLanguageKeywords()
+    * Provieds access and returns a map of language keywords.
+
+* std::map<std::string, LanguageToken>& getOperatorAlphabet()
+    *  Provides access to and returns a map that associates operator strings.
+
+* std::map<std::string , LanguageToken>& getConditionalOperator()
+    * Provides access and returns a map with conditional operators.
+
+* std::map<char, LanguageToken>& getNumberAlphabet()
+    * Provides access to and returns a map. This includes individual digits (0-9).
+
+* std::map<char, LanguageToken>& getAlphabet()
+    * Provides access to and returns a map including the alphanumeric characters (letters, digits, and underscore).
+
+* std::map<std::string, LanguageToken>& getDoubleOperator()
+    * Provides access to and returns a map with Double Operators.
+
 #### Alphabetic Characters
 
 * std::map<char, LanguageToken> _alphabet
@@ -107,15 +139,25 @@ Serves as a data structure. It stores language-related tokens, keywords, and cha
 * std::map<char, LanguageToken> _numberAlphabet
     * This contains the digits of the language from 0 to 9. 
 
-#### Operators
+#### Operator Alphabet
 
 * std::map<char, LanguageToken> _operatorAlphabet
-    * This contains the used operators of the language such as ('+', '-', ';', ':', '"', '<', '>', '(', ')', '!').
+    * This contains the used operators of the language such as ('+', '-', '*', ';', ':', ':=', '=', '\', '==', '!=', '<<', '<', '>', '(', ')', '!').
+
+#### Conditional Operators
+
+* std::map<std::string, LanguageToken> _conditionalOperator
+    * This contains the operators used for conditional statements. This includes the ('<', '>', '==', '!=').
+
+#### Double Operators
+
+* std::map<std::string, LanguageToken> _doubleOperator
+    * This contains the double-character operators. This includes the ('<<', ':=', '==', '!=').
 
 #### Keywords
 
 * std::map<std::string, LanguageToken> _languageKeywords
-    * This contains the keywords of the langugae such as (if, integer, double, and float).
+    * This contains the keywords of the langugae such as (if, integer, double, and output).
 
 
 ### SyntaxAnalyzer
