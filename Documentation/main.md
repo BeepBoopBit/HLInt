@@ -25,9 +25,6 @@ Interface for the whole interpreter. This initiates the lexical analysis process
     * Starts the Interpreter. This triggers the lexical analysis process.
 
 
-
-
-
 ### SymbolTable
 
 Store and maintain information amongst the classes. This include creating, deleting, modifying, and reading information created by the program.
@@ -212,7 +209,7 @@ Serves as a data structure. It stores language-related tokens, keywords, and cha
 
 #### Digits
 
-* s`td::map<char, LanguageToken> _numberAlphabet`
+* `std::map<char, LanguageToken> _numberAlphabet`
     * This contains the digits of the language from 0 to 9. 
 
 #### Operator Alphabet
