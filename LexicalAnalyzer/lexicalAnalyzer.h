@@ -12,6 +12,7 @@
 #include "../LanguageDictionary/LanguageDictionary.h"
 #include "../ErrorHandler/ErrorHandler.h"
 #include "../AbstractSyntaxTree/AbstractSyntaxTree.h"
+#include "../Interpreter/Interpreter.h"
 
 class LexicalAnalyzer{
 
@@ -20,6 +21,7 @@ private:
     LanguageDictionary* _languageDictionary;
     ErrorHandler* _errorHandler;
     AST* _ast;
+    Interpreter* _interpreter;
 
 private:
     
@@ -44,6 +46,9 @@ private:
     bool _error;
     bool _isNegativeNumber = false;
     std::string _totalStringNoSpace = "";
+
+    LanguageToken _prevToken = LanguageToken::InvalidToken;
+    std::string _prevValue = "";
 
 // Constructors
 public:
@@ -86,6 +91,9 @@ public:
 
         // Initialize the Abstract Syntax Tree
         this->_ast = &AST::getInstance();
+
+        // Initialize the Interpreter
+        this->_interpreter = &Interpreter::getInstance();
 
         // Open the file
         this->_file.open(filename);
@@ -166,8 +174,13 @@ public:
             }
             _file.close();
         }
-        _ast->print();
-
+        //_ast->print();
+        auto trees = _ast->getTrees();
+        for(auto tree : trees){
+            _interpreter->interpret(tree);
+            std::cout << "Succesfuly Interpreter" << std::endl;
+        }
+        //_ast->print();
     }
 
     bool isEndOfStatement(char c){
@@ -177,10 +190,6 @@ public:
         return false;
     }
 
-
-private:
-    void tryPush(){
-    }
 
 private:
     void processDigit(char c){
@@ -234,8 +243,12 @@ private:
 
         if(isDouble){
             _ast->insert(LanguageToken::NumberDoubleToken, total_value);
+            _prevToken = LanguageToken::NumberDoubleToken;
+            _prevValue = total_value;
         }else{
             _ast->insert(LanguageToken::NumberIntegerToken, total_value);
+            _prevToken = LanguageToken::NumberIntegerToken;
+            _prevValue = total_value;
         }
 
     }
@@ -278,10 +291,15 @@ private:
         }
 
         if(this->isKeyword(total_value) != LanguageToken::InvalidToken){
-            char next = _file.peek();
-            _ast->insert(this->isKeyword(total_value), total_value);
+            //char next = _file.peek();
+            LanguageToken nextToken = this->isKeyword(total_value);
+            _ast->insert(nextToken, total_value);
+            _prevToken = nextToken;
+            _prevValue = total_value;
         }else{
             _ast->insert(LanguageToken::IdentifierToken, total_value);
+            _prevToken = LanguageToken::IdentifierToken;
+            _prevValue = total_value;
         }
 
     }
@@ -297,24 +315,37 @@ private:
 
         // Check if it's a double operator
         bool isDoubleOperator = this->isOperator(possibleDoubleOperator) != LanguageToken::InvalidToken;
+        bool isDigit = this->isDigit(next) != LanguageToken::InvalidToken;
+
+        // Then it's a negative operator
+        if((c != ')' && c != '(')&& isDigit && detectIfASign(c)){
+            processDigit(c);
+            return;
+        }
 
         // If it's not a double operator, then append the normal operator
         if(!isDoubleOperator){
             // Insert the operator
-            _ast->insert(this->isOperator(c), std::string(1,c));
+            LanguageToken nextToken = this->isOperator(c);
+            _ast->insert(nextToken, std::string(1,c));
+            _prevToken = nextToken;
+            _prevValue = std::string(1,c);
         }
         
         // Otherwise, append the double operator
         else{
             // Insert the double operator
-            _ast->insert(this->isOperator(possibleDoubleOperator), possibleDoubleOperator);
+            LanguageToken nextToken = this->isOperator(possibleDoubleOperator);
+            _ast->insert(nextToken, possibleDoubleOperator);
+            _prevToken = nextToken;
+            _prevValue = possibleDoubleOperator;
             _file.get(c);
             _totalStringNoSpace += c;
         }
     }
 
     void processStringLiteral(){
-        std::string total_value = "";
+        std::string total_value = "\"";
 
         // Create a storage for the character
         char tempC = ' ';
@@ -336,13 +367,30 @@ private:
             }
 
         }
+        total_value += "\"";
         _totalStringNoSpace += tempC;
         _ast->insert(LanguageToken::StringToken, total_value);
+        _prevToken = LanguageToken::StringToken;
+        _prevValue = total_value;
     }
 
 // Checkers
 private:
-    
+    bool detectIfASign(char c){
+        bool isOperator = false;
+        bool isNull = (_prevToken == LanguageToken::InvalidToken) && (_prevValue == "");
+        bool isDoubleOperator = this->isOperator(_prevValue) != LanguageToken::InvalidToken;
+        if(_prevValue.length() == 1){
+            c = _prevValue[0];
+            isOperator = this->isOperator(c) != LanguageToken::InvalidToken;
+            isDoubleOperator = false;
+        }
+
+        if(isOperator || isDoubleOperator || isNull){
+            return true;
+        }
+        return false;
+    }
 
     // Check if the character is a valid identifier
     LanguageToken isIdentifier(char c){
