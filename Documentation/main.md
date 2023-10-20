@@ -26,14 +26,14 @@ Store and maintain information amongst the classes. This include creating, delet
 #### Constructor
 
 * SymbolTable()
-    * Private Constructor to deploy a singleton class
+    * Private Constructor to deploy a singleton class.
 * SymbolTable(SymbolTable const&)
-    * Private Copy Constructor to avoid multiple copy of the class
+    * Private Copy Constructor to avoid multiple copy of the class.
 
 #### Methods
 
 * void operator=(SymbolTable const&) = delete
-    * Deleted assignment operator since the SymbolTable is a sigleton
+    * Deleted assignment operator since the SymbolTable is a sigleton.
 
 ### LexicalAnalyzer
 
@@ -95,7 +95,7 @@ This will handle the logging of errors within the program, put it in a file and 
 
 ### LanguageDictionary
 
-* Serves as a data structure. It stores language-related tokens, keywords, and character mappings used for lexical analysis.
+Serves as a data structure. It stores language-related tokens, keywords, and character mappings used for lexical analysis.
 
 #### Alphabetic Characters
 
@@ -120,10 +120,55 @@ This will handle the logging of errors within the program, put it in a file and 
 
 ### SyntaxAnalyzer
 
+It performs syntax analysis on lines of code. This includes detecting, ensuring it complies to this language's syntax rules, and reports errors.
 
+#### Constructor
+
+* SyntaxAnalyzer()
+    * This initialized the SyntaxAnalyzer by setting some initial state variables and obtaining an instance of the ErrorHandler class.
+
+#### Methods
+
+* bool analyze(std::vector<LanguageToken> line_token)
+    * Examines the first token in a sequence, delegates analysis and error handling to other methods based on the token's type, and returns the results.
+
+* bool identifier(std::vector<LanguageToken> &line_token, int position)
+    * Analyzes a sequence of language tokens, checks the type of the token, and either continues the analysis by calling related methods or reports errors.
+
+* bool declaration(std::vector<LanguageToken> &line_token, int position)
+    * Examines language tokens, checks the validuty of token as a varibale type declaration, and reports errors.
+
+* bool assignment(std::vector<LanguageToken> &line_token, int position)
+    * Analyzes the assignment operators, checks the validty, and reports errors.
+
+*  bool oneWayIfCondition(std::vector<LanguageToken> &line_token, int position)
+    * Analyzes one-way if conditions, validates it by checking the formatting of conditions, and reports errors.
+
+*  bool mathematicalExpression(std::vector<LanguageToken> &line_token, int position, bool conditional = false)
+    * Examines and validates mathematical expressions by ensuring correct syntaxes. This handles the identifiers, literals, operators, and reports errors.
+
+* bool output(std::vector<LanguageToken> &line_token, int position)
+    * Analyzes and checks the validity of output statements. This includes the LeftShiftToken, valid mathematical expression, and reports errors.  
+
+* bool parenthesisBalancer(std::vector<LanguageToken> &line_token, int& position, bool open)
+    * This verifies that open and close parentheses are balanced. 
+
+* bool isAuxParenthesis(LanguageToken& token, bool open)
+    * Used within parenthesisBalancer(), verifies if a LanguageToken is an open or close parenthesis, balances and reports error.
+
+* bool isParenthesis(LanguageToken& token)
+    * Checks and counts all parentheses, reporting an error for unbalanced parentheses.
 
 #### Auxiliary Checker
 
+* bool isIdentifierOrLiteral(LanguageToken token)
+    * Checks if the LanguageToken is an identifier, literal, number, or string and returns true if it matches.
+
+* bool isConditionalOperator(LanguageToken token)
+    * Checks if the LanguageToken is a conditional operator. This includes ('>', '<', '==', '!='), and returns true if the token matches.
+
+* bool isOperator(LanguageToken token)
+    * Checks if the LanguageToken is an operator. This includes ('+' and '-') and returns true if the token matches.
 
 
 ### AbstractSyntaxTree
