@@ -31,94 +31,55 @@ private:
 
 // Other Variables
 private:
-    bool _isDebug = true;
-    std::string _filename;
-    std::ifstream _file;
-    std::ofstream _oFile;
-    int _line;
-    int _column;
-    int _state;
-    std::string _token;
-    std::string _tokenType;
-    int _tokenLine;
-    int _tokenColumn;
-    int _errorCount;
-    bool _error;
-    bool _isNegativeNumber = false;
-    std::string _totalStringNoSpace = "";
 
-    LanguageToken _prevToken = LanguageToken::InvalidToken;
-    std::string _prevValue = "";
+    std::string     _filename               = "test.txt";                   // Default input filename
+    std::string     _outfile                = "NOSPACES.txt";                // Default output filename
+    std::ifstream   _file;                                                  // Input file stream
+    std::ofstream   _oFile;                                                 // Output file stream
+    int             _line;                                                  // Current line. Used for Error handling
+    int             _column;                                                // Current column. Used for Error handling
+    int             _errorCount;                                            // Current error count for the file
+    std::string     _totalStringNoSpace     = "";                           // Total string without space. Use for the output file
+    LanguageToken   _prevToken              = LanguageToken::InvalidToken;  // Previous token. Used for Sign Identfication
+    std::string     _prevValue              = "";                           // Previous value. Used for Sign Identification
+    bool            _hasEndedSuccessfully   = false;                        // Check if the file has ended successfully with semicolon at the end
 
 // Constructors
 public:
-    LexicalAnalyzer(std::string filename){
-        // Initialize Filename
-        this->_filename = filename;
+    LexicalAnalyzer(std::string filename = "test.txt"){
 
-        // Signify the current line
-        this->_line = 1;
-
-        // Signify the current Column
-        this->_column = 1;
-
-        // Signify the current state
-        this->_state = 0;
+        this->_filename             = filename;                             // Set the filename
+        this->_line                 = 0;                                    // Signify the current line
+        this->_column               = 0;                                    // Signify the current column
+        this->_errorCount           = 0;                                    // Signify the current error count
+        this->_languageDictionary   = &LanguageDictionary::getInstance();   // Get the instance of the language dictionary
+        this->_errorHandler         = &ErrorHandler::getInstance();         // Get the instance of the error handler
+        this->_ast                  = &AST::getInstance();                  // Get the instance of the AST
+        this->_interpreter          = &Interpreter::getInstance();          // Get the instance of the Interpreter
         
-        // Initialize the token
-        this->_token = "";
 
-        // Initialize the token type
-        this->_tokenType = "";
-
-        // Initialize the token line
-        this->_tokenLine = 0;
-
-        // Initialize the token column
-        this->_tokenColumn = 0;
-
-        // Initialize the error count
-        this->_errorCount = 0;
-
-        // Initialize the error
-        this->_error = false;
-
-        // Initialize the language dictionary
-        this->_languageDictionary = &LanguageDictionary::getInstance();
-
-        // Initialize the error handler
-        this->_errorHandler = &ErrorHandler::getInstance();
-
-        // Initialize the Abstract Syntax Tree
-        this->_ast = &AST::getInstance();
-
-        // Initialize the Interpreter
-        this->_interpreter = &Interpreter::getInstance();
-
-        // Open the file
-        this->_file.open(filename);
-
-        this->_oFile.open("NOSPACES.txt");
+        // Input File
+        this->_file.open(filename);                                         // Open the file
+        if(!isInFileGood()){return;}                                        // Check if the file is good
+        
+        // Output File
+        this->_oFile.open(_outfile);                                        // Open the file
+        if(!isOutFileGood()){return;}                                       // Check if the file is good
     }
 
     ~LexicalAnalyzer(){
-        this->_file.close();
-
-        // Put all the string with no space in the file
-        _oFile << _totalStringNoSpace;
-
-        this->_oFile.close();
-
-        if(_isDebug){
-            std::cout << "Successfuly Close the files";
-        }
+        this->closeFiles(0, _filename);                                    // Close the input file to avoid memory leak
+        this->closeFiles(1, _outfile);                                     // Close the output file to avoid memory leak
     }
 
 // Methods
 public:
 
     void analyze(){
+
+        // Check if the file is open
         while(_file.is_open()){
+            // If it's, then check if it's good
             while(_file.good()){
 
                 // Container of the character
@@ -135,52 +96,92 @@ public:
                 char next = _file.peek();
                 
                 // Check if the character is a digit
-                bool isDigit = this->isDigit(c) != LanguageToken::InvalidToken;
-                bool isIdentifier = this->isIdentifier(c) != LanguageToken::InvalidToken;
-                bool isOperator= this->isOperator(c) != LanguageToken::InvalidToken;
+                bool isDigit        = this->isDigit(c)      != LanguageToken::InvalidToken;
+                bool isIdentifier   = this->isIdentifier(c) != LanguageToken::InvalidToken;
+                bool isOperator     = this->isOperator(c)   != LanguageToken::InvalidToken;
                 
 
                 // Can Handle String Literals
                 if(c == '"'){
-                    _totalStringNoSpace += c;
-                    processStringLiteral();
+                    _totalStringNoSpace += c;                               // Add the current character to the total string
+                    processStringLiteral();                                 // Process the string literal
+                    _hasEndedSuccessfully = false;                          // Set the flag to false
                 }
  
-                // Can handle single or double operator
+                // Can handle single or double operator or EndOfStatement Token
                 else if(isOperator){
-                    _totalStringNoSpace += c;
-                    processOperator(c);
+
+                    _totalStringNoSpace += c;                               // Add the current character to the total string
+                    processOperator(c);                                     // Process the operator
+                    _hasEndedSuccessfully = false;                          // Set the flag to false
+                    // If it's a semicolon
+                    if(c == ';'){
+                        this->_line++;                                      // Increment the line
+                        this->_column = 0;                                  // Reset the column
+                        _hasEndedSuccessfully = true;                          // Set the flag to false
+                    }
                 }
 
                 // Ensure that this will only be called if the token starts with a digit
                 else if(isDigit){
-                    _totalStringNoSpace += c;
-                    processDigit(c);
+                    _totalStringNoSpace += c;                               // Add the current character to the total string
+                    processDigit(c);                                        // Process the digit
+                    _hasEndedSuccessfully = false;                          // Set the flag to false
                 }
 
                 // Can Handle Keywords
                 else if(isIdentifier){
-                    _totalStringNoSpace += c;
-                    processIdentifier(c);
+                    _totalStringNoSpace += c;                               // Add the current character to the total string
+                    processIdentifier(c);                                   // Process the identifier
+                    _hasEndedSuccessfully = false;                          // Set the flag to false
                 }
-                
-                else if(c == ';'){
-                    _totalStringNoSpace += c;
-                    _ast->insert(LanguageToken::EndOfStatementToken, ";");
-                }
-
-                this->_line++;
-                this->_column = 0;
             }
             _file.close();
         }
-        //_ast->print();
+
+        if(!_hasEndedSuccessfully){
+            _errorHandler->addError("No semicolon at the end of the file",_line, _column);
+        }
+
+#ifdef DEBUG
+        std::cout << "[/] Lexical Analyzer has Successfully Finished. Going to the next Phase (Syntax Analyzer)" << std::endl;
+#endif
+        // Check for Syntax Error
+        _ast->evaluateTree();
+
+        // Display the error if there is any
+        if(_errorHandler->displayError()){
+            // If there is an error, then don't continue to the next phase
+            std::cout << "[!] Will not continue to the next phase" << std::endl;
+            std::cout << "[!] Please fix the error(s) above" << std::endl;
+            return;
+        }
+
+#ifdef DEBUG 
+            std::cout << "[/] Syntax Analyzer Successfuly Finished. Tree has been created and validated. Going to the next Phase (Interpreting)" << std::endl;
+
+    #ifdef DEBUG_AST_BEFORE_INTERPRETER
+            _ast->print();
+    #endif
+
+#endif
         auto trees = _ast->getTrees();
         for(auto tree : trees){
             _interpreter->interpret(tree);
-            std::cout << "Succesfuly Interpreter" << std::endl;
+
+#ifdef DEBUG 
+        #ifdef DEBUG_AST_INSIDE_INTERPRETER
+            std::cout << "[/] Succesfuly Interpreter" << std::endl;
+        #endif
+#endif
         }
-        //_ast->print();
+
+#ifdef DEBUG 
+    #ifdef DEBUG_AST_AFTER_INTERPRETER
+            _ast->print();
+    #endif
+#endif
+        _oFile << _totalStringNoSpace;                                     // Put all the string with no space in the output file
     }
 
     bool isEndOfStatement(char c){
@@ -242,11 +243,11 @@ private:
         }
 
         if(isDouble){
-            _ast->insert(LanguageToken::NumberDoubleToken, total_value);
+            _ast->insert(LanguageToken::NumberDoubleToken, total_value, _line, _column);
             _prevToken = LanguageToken::NumberDoubleToken;
             _prevValue = total_value;
         }else{
-            _ast->insert(LanguageToken::NumberIntegerToken, total_value);
+            _ast->insert(LanguageToken::NumberIntegerToken, total_value, _line, _column);
             _prevToken = LanguageToken::NumberIntegerToken;
             _prevValue = total_value;
         }
@@ -293,11 +294,11 @@ private:
         if(this->isKeyword(total_value) != LanguageToken::InvalidToken){
             //char next = _file.peek();
             LanguageToken nextToken = this->isKeyword(total_value);
-            _ast->insert(nextToken, total_value);
+            _ast->insert(nextToken, total_value, _line, _column);
             _prevToken = nextToken;
             _prevValue = total_value;
         }else{
-            _ast->insert(LanguageToken::IdentifierToken, total_value);
+            _ast->insert(LanguageToken::IdentifierToken, total_value, _line, _column);
             _prevToken = LanguageToken::IdentifierToken;
             _prevValue = total_value;
         }
@@ -327,7 +328,7 @@ private:
         if(!isDoubleOperator){
             // Insert the operator
             LanguageToken nextToken = this->isOperator(c);
-            _ast->insert(nextToken, std::string(1,c));
+            _ast->insert(nextToken, std::string(1,c), _line, _column);
             _prevToken = nextToken;
             _prevValue = std::string(1,c);
         }
@@ -336,7 +337,7 @@ private:
         else{
             // Insert the double operator
             LanguageToken nextToken = this->isOperator(possibleDoubleOperator);
-            _ast->insert(nextToken, possibleDoubleOperator);
+            _ast->insert(nextToken, possibleDoubleOperator, _line, _column);
             _prevToken = nextToken;
             _prevValue = possibleDoubleOperator;
             _file.get(c);
@@ -369,7 +370,7 @@ private:
         }
         total_value += "\"";
         _totalStringNoSpace += tempC;
-        _ast->insert(LanguageToken::StringToken, total_value);
+        _ast->insert(LanguageToken::StringToken, total_value, _line, _column);
         _prevToken = LanguageToken::StringToken;
         _prevValue = total_value;
     }
@@ -425,9 +426,42 @@ private:
 
 // Others
 private:
-    void debugPrint(std::string str){
-        if(this->_isDebug){
-            std::cout << str << "\n";
+
+    bool isInFileGood(){
+        if(_file.is_open()){
+#ifdef DEBUG
+                std::cout << "[/] Successfuly Open the file" << std::endl;
+#endif
+        }else{
+            std::cout << "[!] Failed to open the file [" << _filename << "]. Maybe it's not existing" << std::endl;
+            return false;
+        }
+        return true;
+
+    }
+    bool isOutFileGood(){
+        if(_oFile.is_open()){
+#ifdef DEBUG
+            std::cout << "[/] Successfuly Open the file" << std::endl;
+#endif
+        }else{
+            std::cout << "[!] Failed to open the file [" << _outfile << "]. Maybe it's not existing" << std::endl;
+            return false;
+        }
+        return true;
+    }
+
+    void closeFiles(int fileIndex, std::string filename){
+        if(fileIndex == 0){
+            _file.close();
+#ifdef DEBUG
+            std::cout << "[/] Successfuly Closed the file [" << filename << "]" << std::endl;
+#endif
+        }else{
+            _oFile.close();
+#ifdef DEBUG
+            std::cout << "[/] Successfuly Closed the file [" << filename << "]" << std::endl;
+#endif
         }
     }
 

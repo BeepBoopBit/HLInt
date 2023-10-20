@@ -14,14 +14,25 @@ class ErrorHandler{
 private:
     using LanguageToken = LanguageDictionary::LanguageToken;
 private:
-    std::string _errorLogPath = "error.log";
+    std::string _errorLogPath = "ERROR.log";
     std::ofstream _errorLog;
     bool _isDebug = true;
     std::string _errorString = "";
+    bool _hasError = false;
+    bool _hasAlreadyDisplayed = false;
+    int _errorCount = 0;
 
 private:
-    ErrorHandler(){}
-    ~ErrorHandler(){}
+    ErrorHandler(){
+        _errorLog.open(_errorLogPath);
+    }
+    ~ErrorHandler(){
+        // Ensure that the error will be saved and closed
+        if(_hasError){
+            saveError();
+        }
+        _errorLog.close();
+    }
 
 public:
     static ErrorHandler& getInstance(){
@@ -35,116 +46,52 @@ public:
     ErrorHandler(ErrorHandler const&) = delete;
     void operator=(ErrorHandler const&) = delete;
 
+private:
+    void errorBreakdown(){
+        std::cout << "\n#########################ERROR BREAKDOWN#########################"<< std::endl;
+        std::cout << _errorString;
+        std::cout << "##################################################################\n"<< std::endl;
+    }
 
+    void saveError(){
+        _errorLog << "\n#########################ERROR BREAKDOWN#########################"<< std::endl;
+        _errorLog << _errorString;
+        _errorLog << "##################################################################"<< std::endl;
+
+        if(!_hasAlreadyDisplayed){
+            std::cout << "[/] Error saved to " << _errorLogPath << std::endl;
+            _hasAlreadyDisplayed = true;
+        }
+    }
 public:
-    bool lastError(LanguageToken token, bool state = false){
-        if (state){
-            if(_isDebug){
-                std::cout << "[SUCCESS] Token: " << LanguageDictionary::getInstance().getTokenName(token) << std::endl;
-            }
-            return true;
+    bool displayError(){
+        if(_hasError){
+            errorBreakdown();
+            saveError();
         }
-        std::cout << "#########################ERROR BREAKDOWN#########################"<< std::endl;
-        std::cout << _errorString << std::endl;
-        std::cout << "##################################################################"<< std::endl;
-        return false;
+        return _hasError;
     }
-    bool error(LanguageToken token, bool state = false){
-        if(state){
-            if(_isDebug){
-                std::cout << "[SUCCESS] Token: " << LanguageDictionary::getInstance().getTokenName(token) << std::endl;
-            }
-            return true;
-        }
-        switch(token){
-            case LanguageToken::OpenParenthesisToken:
-            case LanguageToken::CloseParenthesisToken:
-                parentesisError();
-                break;
-            case LanguageToken::IdentifierToken:
-                identifierError();
-                break;
-            case LanguageToken::IfToken:
-                oneWayIfConditionError();
-                break;
-            case LanguageToken::NumberToken:
-                mathematicalExpressionError();
-                break;
-            case LanguageToken::OutputToken:
-                outputError();
-                break;
-            case LanguageToken::AssignmentToken:
-                assignmentError();
-                break;
-            case LanguageToken::TypeIntegerToken:
-            case LanguageToken::TypeDoubleToken:
-                declarationError();
-                break;
-            case LanguageToken::LessThanToken:
-            case LanguageToken::GreaterThanToken:
-            case LanguageToken::EqualityToken:
-            case LanguageToken::NotEqualToken:
-                conditionError();
-                break;
-            default:
-                syntaxAnalyzerError(token);
-                break;
-        }
-        return false;
-    }
-    void displayError(std::string error, std::string caller = "Unknown"){
-        std::cout << "\n\n#########################ERROR BREAKDOWN#########################\n";
-        std::cout << "[ERROR] " << error << " from " << caller << '\n';
-        std::cout << "#################################################################\n\n";
-    }
-    void displaySuccess(std::string success){
+    void displaySuccess(std::string at, std::string message){
         if(_isDebug){
-            std::cout << "[SUCCESS] Token: " << success << '\n';
+            std::cout << "[SUCCESS] " << at << ": " << message << std::endl;
         }
     }
 
-    void logError();
-    void parentesisError(){
-        _errorString += "[!] Error no matching parenthesis.\n";
-        _debug("Trying to Continue");
-    }
-    void identifierError(){
-        _errorString += "[!] Error in Identifier.\n";
-        _debug("Trying to Continue");
-    }
-    void oneWayIfConditionError(){
-        _errorString += "[!] Error in One-Way If Condition.\n";
-        _debug("Trying to Continue");
-    }
-    void mathematicalExpressionError(){
-        _errorString += "[!] Error in Mathematical Expression.\n";
-        _debug("Trying to Continue");
-    }
-    void outputError(){
-        _errorString += "[!] Error in Output.\n";
-        _debug("Trying to Continue");
-    }
-    void syntaxAnalyzerError(LanguageToken token){
-        _errorString += "[!] Error in Syntax Analyzer. Last token is: " + LanguageDictionary::getInstance().getTokenName(token) + "\n";
-        _debug("Trying to Continue");
-    }
-    void lexicalAnalyzerError(){
-        _errorString += "[!] Error in Lexical Analyzer.\n";
-        _debug("Trying to Continue");
-    }
-    void assignmentError(){
-        _errorString += "[!] Error in Assignment.\n";
-        _debug("Trying to Continue");
-    }
-    void declarationError(){
-        _errorString += "[!] Error in Declaration.\n";
-        _debug("Trying to Continue");
-    }
-    void conditionError(){
-        _errorString += "[!] Error in Condition.\n";
-        _debug("Trying to Continue");
+    void addError(std::string error){
+        _errorCount++;
+        _hasError = true;
+        _errorString += "[ERROR] " + error + "\n";
     }
 
+    void addError(std::string error, int line, int column){
+        _errorCount++;
+        _hasError = true;
+        _errorString += "[ERROR] " + error +  "at line: " + std::to_string(line) + " column: " + std::to_string(column) + "\n"; 
+    }
+
+    int getErrorCount(){
+        return _errorCount;
+    }
 
 // Debug
 private:

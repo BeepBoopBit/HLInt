@@ -81,7 +81,9 @@ public:
 
             // Non-Existent or Non-Essential Tokens
             case LanguageToken::RootNode:
+#ifdef DEBUG
                 std::cout << "[DEBUG] Reach Root Node" << std::endl;
+#endif
                 break;
             case LanguageToken::OpenParenthesisToken:
                 throw std::runtime_error("Open Parenthesis should not be in the Tree. Please Check the Lexer");
@@ -114,10 +116,8 @@ private:
         bool isTrue = handleCondition(lhs);
 
         if(isTrue){
-            //std::cout << "[DEBUG] Condition is true" << std::endl;
             interpret(rhs, true);
         }else{
-            //std::cout << "[DEBUG] Condition is false" << std::endl;
         }
         _inIfScope = false;
     }
@@ -233,14 +233,11 @@ private:
             ObjectTypeDouble* variable = new ObjectTypeDouble(lhsLhs->_value, 0.0);
             _symbolTable->declare(lhsLhs->_value, variable);
         }
-        //std::cout << "[DEBUG] Declared Variable: " << lhsLhs->_value << std::endl;
 
         if(_inIfScope){
             _inIfScope = false;
             _symbolTable->remove(lhsLhs->_value);
-            //std::cout << "[DEBUG] Removed Variable: " << lhsLhs->_value << std::endl;
         }
-
 
     }
 
@@ -270,7 +267,6 @@ private:
             variableString->setValue(std::to_string(realValue));
             this->_symbolTable->set(lhs->_value, variableString);
         }
-        //std::cout << "[DEBUG] Assigned Variable: " << lhs->_value << std::endl;
     }
 
     double evaluateMathematicalExpression(AuxillaryTree* &tree){
@@ -360,7 +356,6 @@ private:
             token ="";
         }
         tree->_value = std::to_string(evaluatedValue);
-        //std::cout << "[DEBUG] Evaluated Value: " << evaluatedValue << std::endl;
         return evaluatedValue;
     }
 private:
