@@ -103,6 +103,9 @@ Serves as a data structure. It stores language-related tokens, keywords, and cha
 * LanguageDictionary()
     * Private Constructor to deploy a singleton class.
 
+* LanguageDictionary(LanguageDictionary const&) 
+    * Prevents the creation of new instances by deleting both the copy constructor and the assignment operator.
+
 #### Methods
 
 * static LanguageDictionary& getInstance()
