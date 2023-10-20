@@ -33,7 +33,7 @@ private:
 private:
 
     std::string     _filename               = "test.txt";                   // Default input filename
-    std::string     _outfile                = "NOSPACE.txt";                // Default output filename
+    std::string     _outfile                = "NOSPACES.txt";                // Default output filename
     std::ifstream   _file;                                                  // Input file stream
     std::ofstream   _oFile;                                                 // Output file stream
     int             _line;                                                  // Current line. Used for Error handling
