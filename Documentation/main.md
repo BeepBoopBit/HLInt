@@ -90,7 +90,7 @@ This handles the reading of characters, identifies and categorizes tokens and th
 #### Constructor
 
 * `LexicalAnalyzer(std::string filename)`
-    * This initializes the object and setting various member variables. This includes the preparation for tokenizing and analyzing the content of a file. 
+    * This initializes the object and setting various variables. This includes the preparation for tokenizing and analyzing the content of a file. 
 
 #### Destructor
 
@@ -324,24 +324,130 @@ It performs syntax analysis on lines of code. This includes detecting, ensuring 
 
 ### AbstractSyntaxTree
 
-A data structure that represents the abstract syntactic structure of source code. It parses and represents the structure of the source code by inserting tokens into the tree.
+Processes input code, organizes it into a hierarchical tree structure, and checks its validity based on the syntax and semantics of a specific language, allowing for operations like parsing, evaluation, and debugging.
 
 #### Constructors
 
 * `AST()`
-    * Private Constructor to deploy a singleton class.
+    * Empty constructor defined for the AST class.
 
 * `AST(AST const&) = delete`
     * Deletes the copy constructor to prevent the creation of multiple copies of the class.
 
+#### Destructor
+
+* `~AST()`
+    * Empty destructor defined for the AST class.
+
 #### Methods
 
-* `Interpreter& operator=(const Interpreter&) = delete`
+* `void operator=(AST const&) = delete`
     * Removes assignment operator since the AST is a singleton.
 
 * `static AST& getInstance()`
     * Ensures that there's only one instance of the class and returns it.
 
+* `void insert(LanguageToken token, std::string value = "", int line = 0, int column = 0)`
+    * Manages the insertion of language tokens and their values into the abstract syntax tree. To ensure proper parsing and ordering of operations.
+
+* `void evaluateTree()`
+    * Iterates through a collection of statements or expressions in AST and evaluates each of them.
+
+* `void print()`
+    * Displays the structure of the entire AST. This includes individual tree within it.
+
+* `std::vector<AuxillaryTree*> getTrees()`
+    * Returns a vector containing all the individual trees within the AST.
+
+* `AuxillaryTree* findValidTree(AuxillaryTree* &tree)`
+    * Used to find the rightmost or outermost valid subtree by searching through an AuxillaryTree.
+
+* `void processToken(LanguageToken& token, std::string& value)`
+    * Manages the construction of the AST by appropriately updating _latestSmallTree based on the provided tokens and values.
+
+* `AuxillaryTree* processOperator(LanguageToken token, std::string value, AuxillaryTree* tree)`
+    * Processes operators and keywords while constructing the AST.
+
+* `void processEndOfStatement()`
+    * Merging of small trees into the main AST. Ensures the correct order of operations and overall tree structure.
+
+* `void processCloseParenthesis(LanguageToken &token, std::string &value)`
+    * Handles the completion and merging of small trees in the AST when encountering close parenthesis. This includes operator precedence and conditional statements.
+
+* `void processParenthesisOrOperator(LanguageToken &token, std::string &value, bool &isConditional)`
+    * Handles the processing of parentheses and conditional statements in the AST. Maintains their precedence and the correct order of operations.
+
+* `bool evaluateTree(AuxillaryTree*& tree)`
+    * Evaluates a binary tree structure. Checks that each node in the tree meets certain evaluation criteria. Returns true if it passes, and false if it's the latter.
+
+* `bool processEvaluation(AuxillaryTree* &tree)`
+    * Verifies whether the node meets the expected criteria for its token type. Flags any errors encountered in the process.
+
+* `bool expect(AuxillaryTree* tree, bool (AST::*function)(AuxillaryTree*), int pathway = 2)`
+    * Simplifies the syntax for evaluating specific conditions on subtrees of the AST. 
+
+* `bool expect(AuxillaryTree* tree, bool (AST::*lhs_func)(AuxillaryTree*), bool (AST::*rhs_func)(AuxillaryTree*))`
+    * Allows for separate evaluations of the left and right subtrees of an AuxillaryTree.
+
+* `bool isLiteralOrIdentifier(AuxillaryTree* tree)`
+    * Checks whether the tree represents a literal, an identifier, or certain number types.
+
+* `bool isIdentifier(AuxillaryTree* tree)`
+    * Checks whether the tree represents an identifier.
+
+* `bool isConditional(AuxillaryTree* tree)`
+    * Checks whether the tree represents a conditional operator.
+
+* `bool isAStatement(AuxillaryTree* tree)`
+    * Checks whether the tree represents a statement.
+
+* `bool isNull(AuxillaryTree* tree)`
+    * Checks whether the tree is null.
+
+* `bool isMathematical(AuxillaryTree *tree)`
+    *  Checks whether the tree is a valid mathematical expression.
+
+* `bool isPrintable(AuxillaryTree *tree)`
+    * Checks whether the tree is a valid expression that can be printed.
+
+* `bool isInputable(AuxillaryTree *tree)`
+    * Checks whether the tree is a valid expression that can be used as input.
+
+* `bool declarable(AuxillaryTree *tree)`
+    * Checks whether the tree is a valid expression for declaration.
+
+* `bool isKeyword(AuxillaryTree* tree)`
+    * Checks whether the tree is a valid keyword. Considers if the tree's token matches one of the predefined keyword tokens.
+
+* `bool isComparable(AuxillaryTree* tree)`
+    * Checks whether the tree is a valid expression that can be used for comparison.
+
+* `void printBT(const std::string& prefix, const AuxillaryTree* node, bool isLeft)`
+    * Used to print a binary tree, displaying each node's value and its position within the tree.
+
+* `void printBT(const AuxillaryTree* node)`
+    * Simplifies the process of printing a binary tree structure by calling the printBT() with default parameters.
+
+* `bool isDoubleOperator(std::string value)`
+    * Checks if a given string is a double operator based on a predefined set of double operators in the language dictionary.
+
+* `bool isOperator(std::string value)`
+    * Checks if a given string is an operator. Compares value with operator strings obtained from _languageDictionary. 
+
+* `bool isKeyword(std::string value)`
+    * Checks if a given string is a keyword. Compares it with a set of language keywords from _languageDictionary.
+
+* `bool isConditionalOperator(std::string value)`
+    * Checks if a given string is a conditional operator. Compares the value with conditional operator strings from _languageDictionary.
+
+* `bool isMultiplicationOrDivision(LanguageToken token)`
+    * Checks whether it represents a multiplication or division operation.
+
+* `AuxillaryTree* createTree(LanguageToken& token, std::string& value)`
+    * Used to construct and initialize AuxillaryTree nodes with the given token and value. Adds line and column from the new created instance.
+
+* `AuxillaryTree* createTree(LanguageToken& token, std::string& value, int line, int column)`
+    * Ultimately does the same process as the previous createTree() but with additional parameters for specifications.
 
 
 ### Interpreter
@@ -409,6 +515,24 @@ This interprets and executes the code. Its functionalities includes interpretati
 * `std::string getTreeValues(AuxillaryTree* &tree)`
     * It builds and returns a string by combining the values of an AuxillaryTree and its child nodes through recursive traversal.
 
+### TestCaseHandler
+
+Facilitate the execution and management of test cases. 
+
+#### Constructor
+
+* `TestCaseHandler()`
+    * Empty constructor defined for the TestCaseHandler class.
+
+#### Destructor
+
+* `~TestCaseHandler()`
+    * Empty destructor defined for the TestCaseHandler class.
+
+#### Method
+
+* `void runTestCases()`
+    * Runs test cases and displays a message indicating that it's running.
 
 ## Variables
 
@@ -510,6 +634,42 @@ This interprets and executes the code. Its functionalities includes interpretati
 
 * `bool _isConditional = false`
     * This is a boolean used to check if the current small tree is a conditional statement.
+
+* `LanguageToken _token = LanguageToken::InvalidToken`
+    * Declares a variable _token and initializes it to the value LanguageToken::InvalidToken.
+
+* ` AuxillaryTree* _left = nullptr`
+    *  Declares a variable _left and initializes it to nullptr.
+
+* `AuxillaryTree* _right = nullptr`
+    * Declares a variable _right and initializes it to nullptr.
+
+* `std::string _value = ""`
+    * Declares a variable _value and initializes it to an empty string.
+
+* `int _line = 0`
+    * Declares a variable _line and initializes it to 0.
+
+* `int _column = 0`
+    * Declares a variable _column and initializes it to 0.
+
+* `std::string _parentDir = "../TestCases/";`
+    * Initializes a variable _parentDir with the string value "../TestCases/".
+
+
+#### Auxillary Class: AuxillaryTree
+
+Provides a structure for individual nodes in the tree and includes information such as the token type, left and right child pointers, the value, and location information.
+
+##### Constructor
+
+* `AuxillaryTree(LanguageToken token, std::string value, int line, int column): _token(token), _value(value), _line(line), _column(column)`
+    * Initializes an AuxillaryTree object with the provided token, value, line, and column values.
+
+##### Destructor
+
+* `~AuxillaryTree()`
+    * Empty destructor defined for the AuxillaryTree class.
 
 
 #### Auxillary Class: ObjectType
