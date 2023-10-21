@@ -216,18 +216,30 @@ private:
             tree->_left = newTree;
         }else{
             // Otherwise, check what kind of operation we are dealing with
-            // TODO: Handle DivisionToken
-            if(token == LanguageToken::MultiplicationToken){
-                // If it's a multiplication, then we need to have the rhs node of the the tree
-                AuxillaryTree* tempTree = tree->_right;
+            if(this->isMultiplicationOrDivision(token) && (!this->isMultiplicationOrDivision(_latestSmallTree->_token))){
+            //if(token == LanguageToken::MultiplicationToken){
                 
-                // Create a new tree and make the rhs node the left node of the new tree
+                // Go the left most side of the tree
+                AuxillaryTree* tempTreeParent = tree;
+                AuxillaryTree* tempTree = tree->_right;
+                if(tempTree == nullptr){
+                    // Otherwise, we need make the new created tree the parent of the latest small tree
+                    AuxillaryTree* newTree = new AuxillaryTree(token, value, tree->_line, tree->_column);
+                    newTree->_left = tree;
+                    tree = newTree;
+                    return tree;
+                }
+                while(tempTree->_right != nullptr){
+                    if(tempTree->_value == "*" || tempTree->_value == "/"){
+                        break;
+                    }
+                    tempTree = tempTree->_left;
+                }
+
                 AuxillaryTree* newTree = new AuxillaryTree(token, value, tree->_line, tree->_column);
                 newTree->_left = tempTree;
-                tree->_right = newTree;
-
-                // This is done to make sure that the new tree is the parent of the latest small tree
-                // whilst ensuring that the multiplication token is done first
+                tempTreeParent->_right= newTree;
+                return tempTreeParent;
             }else{
                 // Otherwise, we need make the new created tree the parent of the latest small tree
                 AuxillaryTree* newTree = new AuxillaryTree(token, value, tree->_line, tree->_column);
@@ -264,11 +276,66 @@ private:
                 // And Continue
                 continue;
             }
+            
+            if(this->isMultiplicationOrDivision(tempTree->_token)){
+            //if(tempTree->_token == LanguageToken::MultiplicationToken){
+                // This tree will be  the child of the latest tree
+
+                // If the parent node is again a multiplication, then it's safe to assume that the latest small tree should be a root node
+                if(this->isMultiplicationOrDivision(_latestSmallTree->_token)){
+                    AuxillaryTree* rhsRoot = _latestSmallTree->_right;
+                    _latestSmallTree->_right = tempTree;
+                    // Then it might have parenthesis
+                    if(_latestSmallTree->_left == nullptr){
+                        _latestSmallTree->_left = tempTree;
+                    }else if(_latestSmallTree->_right == nullptr){
+                        _latestSmallTree->_right = tempTree;
+                    }
+
+                    // Normal Processing
+                    else if(tempTree->_left == nullptr){
+                        tempTree->_left = rhsRoot;
+                    }else if(tempTree->_right == nullptr){
+                        tempTree->_right = rhsRoot;
+                    }else{
+                        if(rhsRoot != nullptr){
+                            throw std::runtime_error("This Case in not yet Handled by the Language");
+                        }
+                    }
+
+ 
+                }else{
+                    AuxillaryTree* lhsRoot = _latestSmallTree->_left;
+                    _latestSmallTree->_left = tempTree;
+                    // Then it might have parenthesis
+                    if(_latestSmallTree->_left == nullptr){
+                        _latestSmallTree->_left = tempTree;
+                    }else if(_latestSmallTree->_right == nullptr){
+                        _latestSmallTree->_right = tempTree;
+                    }
+                    
+                    // Normal Processing
+                    else if(tempTree->_left == nullptr){
+                        tempTree->_left = lhsRoot;
+                    }else if(tempTree->_right == nullptr){
+                        tempTree->_right = lhsRoot;
+                    }else{
+                        if(lhsRoot != nullptr){
+                            throw std::runtime_error("This Case in not yet Handled by the Language");
+                        }
+                    }
+                }
+               _smallTrees.pop_back();
+                continue;
+            }
 
             // Check if lhs or rhs is null to determine where to put the temp tree
-            if(tempTree->_left == nullptr){
+            if(tempTree->_right == nullptr){
+                tempTree->_right= _latestSmallTree;
+            }else if(tempTree->_left == nullptr){
                 tempTree->_left = _latestSmallTree;
-            }else{
+            }
+            else{
 
                 // If lhs is not null, then we need to do some processing to maintain the order of operations
                 // This bool is used to check if the temp tree has been changed.
@@ -309,7 +376,7 @@ private:
                     else{
                         newTempTree->_left = tempTree;
                     }
-                    tempTree = newTempTree;
+                    tempTree = _latestSmallTree;
                 }
 
                 // Otherwise we just need to set the rhs of the temp tree to the latest small tree
@@ -395,30 +462,47 @@ private:
 
         // If there's only one child that is not null
         else{
-
+            _smallTrees.push_back(lastSmallTree);
+            lastSmallTree = _latestSmallTree;
             // Find what it's and set it to the latest small tree
-            if(lastSmallTree->_right ==nullptr){
-                lastSmallTree->_right = _latestSmallTree;
-            }
-            else{
-                lastSmallTree->_left = _latestSmallTree;
-            }
+            //if(lastSmallTree->_right ==nullptr){
+                //lastSmallTree->_right = _latestSmallTree;
+            //}
+            //else{
+                //lastSmallTree->_left = _latestSmallTree;
+            //}
         }
 
         // If it's a conditional statement, Additional processing is required
         if(_isConditional){
-
-            // Since we've pushed the conditional statement to the small tree, we need to pop it again and process it. This maintains its precedence in the tree.
-            AuxillaryTree* lhs_value =  _smallTrees.back();
-            _smallTrees.pop_back();
-
-            // In this case, we can be sure the lhs of LastSmallTree is null
-            // because we've pushed the conditional statement to the small tree without processing it
-            // making the lhs and rhs null
-            // However, since we processed rhs on the previous code, we can be sure that the rhs is not null
-            // This code append the rhs part of the conditional statement to the lhs part of the tree. Meaning, process the rhs before this.
-            lastSmallTree->_left = lhs_value;
-
+            bool foundAConditional = false;
+            int defaultSize = _smallTrees.size();
+            for(int i = 0; i < defaultSize; ++i){
+                auto treeValue = _smallTrees.back();
+                if(this->isConditional(treeValue)){
+                    foundAConditional = true;
+                    treeValue->_right = _latestSmallTree;
+                    _latestSmallTree = treeValue;
+                    _smallTrees.pop_back();
+                    continue;
+                }
+                // Expects that the parenthesis was already merge at this point so othere's only one tree left before the if-token
+                if(foundAConditional){
+                    _latestSmallTree->_left = treeValue;
+                    _smallTrees.pop_back();
+                    break;
+                }
+                AuxillaryTree* backTree = _smallTrees.back();
+                if(backTree->_left == nullptr){
+                    backTree->_left = _latestSmallTree;
+                }else if(backTree->_right == nullptr){
+                    backTree->_right = _latestSmallTree;
+                }else{
+                    std::cout << "UNDEFINED FOR NOW";
+                }
+                _latestSmallTree = backTree;
+                _smallTrees.pop_back();
+            }
             // Mark the small tree as not conditional. This is because we've already processed it
             _isConditional = false;
             
@@ -427,7 +511,7 @@ private:
 
             // Check what is available, and append the if-token to it.
             if(newLastSmallTree->_left == nullptr){
-                newLastSmallTree->_left = lastSmallTree;
+                newLastSmallTree->_left = _latestSmallTree;
             }else{
 
                 // There's a possibility that the lhs is not null, but the rhs is null on the outermost right, that's why we need to traverse the tree to find the outermost right
@@ -435,7 +519,7 @@ private:
                 while(tempTree->_right != nullptr){
                     tempTree = tempTree->_right;
                 }
-                tempTree->_right = lastSmallTree;
+                tempTree->_right = _latestSmallTree;
             }
 
             // Update then pop the small tree
@@ -480,13 +564,17 @@ private:
         _latestSmallTree = nullptr;
 
         // If it's a conditional operator, create a new small tree
-        if((_isConditional = isConditional)){
-            // Create a new small tree base on the current token and value.
-            // This is done to ensure the presedence of the conditional statement whilst making sure that the next part of the condition is with correct precedence
-            _latestSmallTree = new AuxillaryTree(token, value, _line, _column);
-            _smallTrees.push_back(_latestSmallTree);
-            _latestSmallTree = nullptr;
+        if(!_isConditional){
+            _isConditional = isConditional;
+            if(_isConditional){
+                // Create a new small tree base on the current token and value.
+                // This is done to ensure the presedence of the conditional statement whilst making sure that the next part of the condition is with correct precedence
+                _latestSmallTree = new AuxillaryTree(token, value, _line, _column);
+                _smallTrees.push_back(_latestSmallTree);
+                _latestSmallTree = nullptr;
+            }
         }
+        
         return;
     }
 
@@ -549,6 +637,7 @@ private:
             case LanguageToken::AdditionToken:
             case LanguageToken::SubtractionToken:
             case LanguageToken::MultiplicationToken:
+            case LanguageToken::DivisionToken:
             case LanguageToken::AssignmentToken:
             case LanguageToken::LessThanToken:
             case LanguageToken::GreaterThanToken:
@@ -715,7 +804,8 @@ private:
         bool fourthRule = tree->_token == LanguageToken::NumberDoubleToken;
         bool fifthRule = tree->_token == LanguageToken::AdditionToken;
         bool sixthRule = tree->_token == LanguageToken::SubtractionToken;
-        bool seventhRule = tree->_token == LanguageToken::MultiplicationToken;
+        bool seventhRule = this->isMultiplicationOrDivision(tree->_token);
+        //bool seventhRule = tree->_token == LanguageToken::MultiplicationToken;
         // We can add Strings
         bool eightRule= tree->_token == LanguageToken::StringToken;
         if(firstRule || secondRule || thirdRule || fourthRule || fifthRule || sixthRule || seventhRule || eightRule){
@@ -815,6 +905,10 @@ private:
     bool isConditionalOperator(std::string value){
         auto alphabet = _languageDictionary->getConditionalOperator();
         return alphabet.find(value) != alphabet.end();
+    }
+
+    bool isMultiplicationOrDivision(LanguageToken token){
+        return token == LanguageToken::MultiplicationToken || token == LanguageToken::DivisionToken;
     }
 };
 

@@ -382,13 +382,14 @@ private:
         bool isOperator = false;
         bool isNull = (_prevToken == LanguageToken::InvalidToken) && (_prevValue == "");
         bool isDoubleOperator = this->isOperator(_prevValue) != LanguageToken::InvalidToken;
+        bool isPossible = _prevValue != ")" && _prevValue != "(";
         if(_prevValue.length() == 1){
             c = _prevValue[0];
             isOperator = this->isOperator(c) != LanguageToken::InvalidToken;
             isDoubleOperator = false;
         }
 
-        if(isOperator || isDoubleOperator || isNull){
+        if((isOperator || isDoubleOperator || isNull) && isPossible){
             return true;
         }
         return false;
