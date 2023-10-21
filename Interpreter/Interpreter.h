@@ -45,6 +45,7 @@ public:
             case LanguageToken::NumberDoubleToken:
             case LanguageToken::LiteralToken:
             case LanguageToken::OutputToken:
+            case LanguageToken::InputToken:
                 // This means that left and right is nullptr 
                 return;
                 break;
@@ -66,6 +67,11 @@ public:
                     handleOutput(tree);
                     break;
                 }
+            case LanguageToken::RightShiftToken:
+                {
+                    handleInput(tree);
+                    break;
+                }
             case LanguageToken::LessThanToken:
             case LanguageToken::GreaterThanToken:
             case LanguageToken::EqualityToken:
@@ -77,6 +83,7 @@ public:
                 break;
             case LanguageToken::TypeIntegerToken:
             case LanguageToken::TypeDoubleToken:
+            case LanguageToken::TypeStringToken:
                 handleDeclaration(tree);
                 break;
 
@@ -219,6 +226,36 @@ private:
             std::cout << realValue << std::endl;
         }
     }
+    void handleInput(AuxillaryTree* &tree){
+        // Tree token will always be >> operator
+        // LHS will always be the input keyword
+        // RHS will always be an identifier
+        AuxillaryTree* rhs = tree->_right;
+        std::string value;
+        std::getline(std::cin, value);
+        std::string identifier = rhs->_value;
+        auto variable = _symbolTable->get(identifier);
+        if(variable->getType() == "integer"){
+            ObjectTypeInt* variableInt = _symbolTable->parseToInt(variable);
+            try{
+                variableInt->setValue(std::stoi(value));
+            }catch(std::invalid_argument& e){
+                throw std::runtime_error("Cannot convert input to integer");
+            }
+        }else if(variable->getType() == "double"){
+            ObjectTypeDouble* variableDouble = _symbolTable->parseToDouble(variable);
+            try{
+                variableDouble->setValue(std::stod(value));
+            }catch(std::invalid_argument& e){
+                throw std::runtime_error("Cannot convert input to double");
+            }
+        }else if(variable->getType() == "string"){
+            ObjectTypeString* variableString = _symbolTable->parseToString(variable);
+            variableString->setValue(value);
+        }
+    }
+
+
     void handleDeclaration(AuxillaryTree* &tree){
         // Tree Token wil always be its type
         // LHS will always be a colon operator
@@ -232,6 +269,9 @@ private:
             _symbolTable->declare(lhsLhs->_value, variable);
         }else if(tree->_token == LanguageToken::TypeDoubleToken){
             ObjectTypeDouble* variable = new ObjectTypeDouble(lhsLhs->_value, 0.0);
+            _symbolTable->declare(lhsLhs->_value, variable);
+        }else if(tree->_token == LanguageToken::TypeStringToken){
+            ObjectTypeString* variable = new ObjectTypeString(lhsLhs->_value, "");
             _symbolTable->declare(lhsLhs->_value, variable);
         }
 
