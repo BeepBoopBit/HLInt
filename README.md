@@ -61,9 +61,14 @@ Evaluation of mathematical operation is support with the order of operation. Cur
 
 * Addition (+)
 * Subtraction (-)
+* Multiplication (*)
+* Division (/)
 
 ```
 output << x + ((y+3) + 4) - 10;
+output << (10/2) + (3*8);
+output << 10/(2+3)*8
+output << 10/2*8
 ```
 
 ### Supported Literals

@@ -31,8 +31,8 @@ public:
             return;
         }
         if(isInterpretAll){
-            interpret(tree->_right);
-            interpret(tree->_left);
+            interpret(tree->_left, true);
+            interpret(tree->_right, true);
         }
 
         bool isCorrect = false;
@@ -51,6 +51,7 @@ public:
             case LanguageToken::AdditionToken:
             case LanguageToken::SubtractionToken:
             case LanguageToken::MultiplicationToken:
+            case LanguageToken::DivisionToken:
                 {
                     std::string value = getTreeValues(tree);
                     deleteReplaceTree(tree, LanguageToken::NumberToken, value);
@@ -280,6 +281,8 @@ private:
         // 2 = Multiplication
         // 3 = Division
         int typeOfOperation = 0;
+        bool nextIsASign = true;
+        int signModifier = 1;
         for(int i = 0; i < expression.length(); ++i){
             c = expression[i];
             token += c;
@@ -295,13 +298,13 @@ private:
                     tempC = expression[++i];
                 }
                 if(typeOfOperation == 0){
-                    evaluatedValue += std::stod(token);
+                    evaluatedValue += std::stod(token)*signModifier;
                 }else if(typeOfOperation == 1){
-                    evaluatedValue -= std::stod(token);
+                    evaluatedValue -= std::stod(token)*signModifier;
                 }else if(typeOfOperation == 2){
-                    evaluatedValue *= std::stod(token);
+                    evaluatedValue *= std::stod(token)*signModifier;
                 }else if(typeOfOperation == 3){
-                    evaluatedValue /= std::stod(token);
+                    evaluatedValue /= std::stod(token)*signModifier;
                 }
                 --i;
             }
@@ -318,34 +321,50 @@ private:
                 if(variable->getType() == "integer"){
                     ObjectTypeInt* variableInt = _symbolTable->parseToInt(variable);
                     if(typeOfOperation == 0){
-                        evaluatedValue += variableInt->getValue();
+                        evaluatedValue += variableInt->getValue()*signModifier;
                     }else if(typeOfOperation == 1){
-                        evaluatedValue -= variableInt->getValue();
+                        evaluatedValue -= variableInt->getValue()*signModifier;
                     }else if(typeOfOperation == 2){
-                        evaluatedValue *= variableInt->getValue();
+                        evaluatedValue *= variableInt->getValue()*signModifier;
                     }else if(typeOfOperation == 3){
-                        evaluatedValue /= variableInt->getValue();
+                        evaluatedValue /= variableInt->getValue()*signModifier;
                     }
+                    nextIsASign = false;
                 }else if(variable->getType() == "double"){
                     ObjectTypeDouble* variableDouble = _symbolTable->parseToDouble(variable);
                     if(typeOfOperation == 0){
-                        evaluatedValue += variableDouble->getValue();
+                        evaluatedValue += variableDouble->getValue()*signModifier;
                     }else if(typeOfOperation == 1){
-                        evaluatedValue -= variableDouble->getValue();
+                        evaluatedValue -= variableDouble->getValue()*signModifier;
                     }else if(typeOfOperation == 2){
-                        evaluatedValue *= variableDouble->getValue();
+                        evaluatedValue *= variableDouble->getValue()*signModifier;
                     }else if(typeOfOperation == 3){
-                        evaluatedValue /= variableDouble->getValue();
+                        evaluatedValue /= variableDouble->getValue()*signModifier;
                     }
+                    nextIsASign = false;
                 }
             }else if(token == "+"){
-                typeOfOperation = 0;
+                if(nextIsASign){
+                    signModifier = 1;
+                }else{
+                    typeOfOperation = 0;
+                }
+                nextIsASign = true;
             }else if(token == "-"){
-                typeOfOperation = 1;
+                if(nextIsASign){
+                    signModifier = -1;
+                }else{
+                    typeOfOperation = 1;
+                }
+                nextIsASign = true;
             }else if(token == "*"){
                 typeOfOperation = 2;
+                signModifier = 1;
+                nextIsASign = true;
             }else if(token == "/"){
                 typeOfOperation = 3;
+                signModifier = 1;
+                nextIsASign = true;
             }
             token ="";
         }
@@ -382,8 +401,12 @@ private:
     void deleteReplaceTree(AuxillaryTree* &tree, LanguageToken token, std::string value){
         tree->_token = token;
         tree->_value = value;
-        delete tree->_left;
-        delete tree->_right;
+        if(tree->_left != nullptr){
+            delete tree->_left;
+        }
+        if(tree->_right != nullptr){
+            delete tree->_right;
+        }
         tree->_left = nullptr;
         tree->_right = nullptr;
     }
