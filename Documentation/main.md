@@ -42,9 +42,45 @@ Store and maintain information amongst the classes. This include creating, delet
 * `void operator=(SymbolTable const&) = delete`
     * Deleted assignment operator since the SymbolTable is a sigleton.
 
+* `static SymbolTable& getInstance(){`
+    * Ensures that there's only one instance of the class and returns it.
 
+* `void declare(std::string name, ObjectType* variable)`
+    * Adds a variable with a specified name and its data type, throws an error if it already exists.
 
+* `ObjectType* get(std::string name)`
+    * Retrieves the variable associated with a given name from the symbol table and returns it. Throws an error if it doesn't exist.
 
+* `void set(std::string name, ObjectType* variable)`
+    * sets the variable associated with a given name in the symbol table. Throws an error if it doesn't exist.
+
+* `void remove(std::string name)`
+    * Removes a variable from the symbol table if it exists. Throws an error if it doesn't exist.
+
+* `ObjectTypeInt* parseToInt(ObjectType* variable)`
+    * Converts a variable to an integer type and returns it. If conversion is not possible, it prints an error message and returns 'nullptr'.
+
+* `ObjectTypeDouble* parseToDouble(ObjectType *variable)`
+    * Converts a variable to a double type and returns it. If conversion is not possible, it prints an error message and returns 'nullptr'.
+
+* `ObjectTypeString* parseToString(ObjectType *variable)`
+    * Converts a variable to a string type and returns it. If conversion is not possible, it prints an error message and returns 'nullptr'.
+
+* `void writeToFile()`
+    * Writes the contents of the variableTable to a file in a specific format. This includes saved information about integer and double variables.
+
+* `void saveToFile()`
+    * Saves the symbol table to a file and closes the file.
+
+##### Debug
+
+* `void printVariableTable()`
+    * Prints the contents of the variable table to the console. Displays the variable names and their values.
+
+##### Checkers
+
+* `bool isVariable(std::string token)`
+    * Checks if a given string exists in the variable table. It either returns true or fales depending if it exists or not.
 
 
 ### LexicalAnalyzer
@@ -300,6 +336,12 @@ It performs syntax analysis on lines of code. This includes detecting, ensuring 
 
 * `std::map<std::string, ObjectType*> variableTable;`
     * Contains all information about variables that is being used in the program.
+
+* `std::string _filename = "RES_SYM.txt";`
+    * Initializes a variable named _filename with the string value "RES_SYM.txt"
+
+* `std::ofstream _file`
+    * Declares a variable named _file as an output file stream.
 
 #### Auxillary Class: ObjectType
 
