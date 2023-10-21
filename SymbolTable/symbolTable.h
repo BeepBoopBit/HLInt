@@ -57,29 +57,10 @@ public:
     }
 
     ObjectType* get(std::string name){
-        auto value = this->variableTable.find(name) != this->variableTable.end() ? this->variableTable[name] : nullptr;
-        if(value == nullptr){
-            throw std::runtime_error("Variable is not Declared");
-        }
+        // Check if the variable exists. If not, throw an error 
+        auto value = this->variableTable.find(name) != this->variableTable.end() ? this->variableTable[name] : (throw std::runtime_error("Variable is not Declared"));
         return value;
     }
-
-    std::vector<std::string> getVariableNames(){
-        std::vector<std::string> names;
-        for(std::map<std::string, ObjectType*>::iterator it = this->variableTable.begin(); it != this->variableTable.end(); it++){
-            names.push_back(it->first);
-        }
-        return names;
-    }
-
-    std::vector<ObjectType*> getVariables(){
-        std::vector<ObjectType*> variables;
-        for(std::map<std::string, ObjectType*>::iterator it = this->variableTable.begin(); it != this->variableTable.end(); it++){
-            variables.push_back(it->second);
-        }
-        return variables;
-    }
-
 
 // Destructive Methods
 public:

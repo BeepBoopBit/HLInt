@@ -8,16 +8,18 @@ Here list the currently supported operation in the language.
 
 ### Declaration
 
-There are only two supported data types currently.
+There are only Three supported data types currently.
 
 * Integer
 * Double
+* String
 
 You can declare them as follows:
 
 ```
 x: integer;
 y: double;
+z: string;
 ```
 
 ### Assignmenet
@@ -53,6 +55,16 @@ You can also do output operation in the language.
 output << x;
 output << y;
 output << x + y;
+```
+
+## Input
+
+You can now do Input Operations in the language.
+
+```
+x: string;
+intput >> x;
+output << x;
 ```
 
 ### Mathematical Evaluation
@@ -111,5 +123,3 @@ output << "watermelon"
 * Shows an error at line 3 to be `:=`. Though the real error lies on the output part, it started at the assignment when evaluating it.
 
 * Other errors such as the `output << z` will be detected and thrown on runtime since it's a `runtime error` such as this.
-
-    ![Alt text](Documentation/Images/image-2.png)
