@@ -1,0 +1,1 @@
+x:double;x:=3*(5+2)*3+(4-8)*6;if((x-5)+8*3==8*3+(39-5))output<<"YES";output<<x;output<<x+((x+3)+4)-10;x:=4.123+18;output<<x;x:=-4.1823;output<<x;x:=(x+1)-((3+4)-5);output<<x;x:=5;output<<x;output<<"hello";xyz:double;xyz:=1+2+3-xyz+4-9;output<<xyz;if(20-10==50)output<<"Hello";xy:double;xy:=3+6;if(xyz==2)output<<xyz;if(xyz<10+20-5)output<<xyz;output<<(10/2)+(3*8);
