@@ -18,10 +18,10 @@ class LexicalAnalyzer{
 
 // Owned Types
 private:
-    LanguageDictionary* _languageDictionary;
-    ErrorHandler* _errorHandler;
-    AST* _ast;
-    Interpreter* _interpreter;
+    LanguageDictionary*     _languageDictionary;
+    ErrorHandler*           _errorHandler;
+    AST*                    _ast;
+    Interpreter*            _interpreter;
 
 private:
     
@@ -97,9 +97,9 @@ public:
                 char next = _file.peek();
                 
                 // Check if the character is a digit
-                bool isDigit        = this->isDigit(c)      != LanguageToken::InvalidToken;
-                bool isIdentifier   = this->isIdentifier(c) != LanguageToken::InvalidToken;
-                bool isOperator     = this->isOperator(c)   != LanguageToken::InvalidToken;
+                bool isDigit        = this->isDigit(c);
+                bool isIdentifier   = this->isIdentifier(c);
+                bool isOperator     = this->isOperator(c);
                 
 
                 // Can Handle String Literals
@@ -207,7 +207,7 @@ private:
         char tempC = _file.peek();
 
         // Check if the character is a digit
-        isDigit = this->isDigit(tempC) != LanguageToken::InvalidToken || tempC == '.';
+        isDigit = this->isDigit(tempC);
 
         if(isDigit){
             _file.get(tempC);
@@ -233,7 +233,7 @@ private:
             tempC = _file.peek();
 
             // Check if the character is a digit
-            isDigit = this->isDigit(tempC) != LanguageToken::InvalidToken || tempC == '.';
+            isDigit = this->isDigit(tempC) || tempC == '.';
             if(!isDigit){
                 break;
             }
@@ -244,13 +244,11 @@ private:
         }
 
         if(isDouble){
-            _ast->insert(LanguageToken::NumberDoubleToken, total_value, _line, _column);
-            _prevToken = LanguageToken::NumberDoubleToken;
-            _prevValue = total_value;
+            this->insertInAST(LanguageToken::NumberDoubleToken, total_value);
+            this->setPreviousValues(LanguageToken::NumberDoubleToken, total_value);
         }else{
-            _ast->insert(LanguageToken::NumberIntegerToken, total_value, _line, _column);
-            _prevToken = LanguageToken::NumberIntegerToken;
-            _prevValue = total_value;
+            this->insertInAST(LanguageToken::NumberIntegerToken, total_value);
+            this->setPreviousValues(LanguageToken::NumberIntegerToken, total_value);
         }
 
     }
@@ -264,7 +262,7 @@ private:
         char tempC = _file.peek();
 
         // Check if the character is in the alphabet
-        bool isIdentifier = this->isIdentifier(tempC) != LanguageToken::InvalidToken;
+        bool isIdentifier = this->isIdentifier(tempC);
 
         if(isIdentifier){
             _file.get(tempC);
@@ -280,7 +278,7 @@ private:
 
             tempC = _file.peek();
 
-            isIdentifier = this->isIdentifier(tempC) != LanguageToken::InvalidToken;
+            isIdentifier = this->isIdentifier(tempC);
 
             // Check if the character is a digit
             if(!isIdentifier){
@@ -292,16 +290,13 @@ private:
 
         }
 
-        if(this->isKeyword(total_value) != LanguageToken::InvalidToken){
-            //char next = _file.peek();
-            LanguageToken nextToken = this->isKeyword(total_value);
-            _ast->insert(nextToken, total_value, _line, _column);
-            _prevToken = nextToken;
-            _prevValue = total_value;
+        if(this->isKeyword(total_value)){
+            LanguageToken nextToken = this->getKeyword(total_value);
+            this->insertInAST(nextToken, total_value);
+            this->setPreviousValues(nextToken, total_value);
         }else{
-            _ast->insert(LanguageToken::IdentifierToken, total_value, _line, _column);
-            _prevToken = LanguageToken::IdentifierToken;
-            _prevValue = total_value;
+            this->insertInAST(LanguageToken::IdentifierToken, total_value);
+            this->setPreviousValues(LanguageToken::IdentifierToken, total_value);
         }
 
     }
@@ -316,11 +311,11 @@ private:
         std::string possibleDoubleOperator = std::string(1,c) + std::string(1,next);
 
         // Check if it's a double operator
-        bool isDoubleOperator = this->isOperator(possibleDoubleOperator) != LanguageToken::InvalidToken;
-        bool isDigit = this->isDigit(next) != LanguageToken::InvalidToken;
+        bool isDoubleOperator = this->isOperator(possibleDoubleOperator);
+        bool isDigit = this->isDigit(next);
 
         // Then it's a negative operator
-        if((c != ')' && c != '(')&& isDigit && detectIfASign(c)){
+        if(!this->isOpenAndCloseParenthesis(c) && isDigit && this->detectIfASign(c)){
             processDigit(c);
             return;
         }
@@ -328,19 +323,17 @@ private:
         // If it's not a double operator, then append the normal operator
         if(!isDoubleOperator){
             // Insert the operator
-            LanguageToken nextToken = this->isOperator(c);
-            _ast->insert(nextToken, std::string(1,c), _line, _column);
-            _prevToken = nextToken;
-            _prevValue = std::string(1,c);
+            LanguageToken nextToken = this->getOperator(c);
+            this->insertInAST(nextToken, std::string(1,c));
+            this->setPreviousValues(nextToken, std::string(1,c));
         }
         
         // Otherwise, append the double operator
         else{
             // Insert the double operator
-            LanguageToken nextToken = this->isOperator(possibleDoubleOperator);
-            _ast->insert(nextToken, possibleDoubleOperator, _line, _column);
-            _prevToken = nextToken;
-            _prevValue = possibleDoubleOperator;
+            LanguageToken nextToken = this->getOperator(possibleDoubleOperator);
+            this->insertInAST(nextToken, possibleDoubleOperator);
+            this->setPreviousValues(nextToken, possibleDoubleOperator);
             _file.get(c);
             _totalStringNoSpace += c;
         }
@@ -371,9 +364,8 @@ private:
         }
         total_value += "\"";
         _totalStringNoSpace += tempC;
-        _ast->insert(LanguageToken::StringToken, total_value, _line, _column);
-        _prevToken = LanguageToken::StringToken;
-        _prevValue = total_value;
+        this->insertInAST(LanguageToken::StringToken, total_value);
+        this->setPreviousValues(LanguageToken::StringToken, total_value);
     }
 
 // Checkers
@@ -381,11 +373,11 @@ private:
     bool detectIfASign(char c){
         bool isOperator = false;
         bool isNull = (_prevToken == LanguageToken::InvalidToken) && (_prevValue == "");
-        bool isDoubleOperator = this->isOperator(_prevValue) != LanguageToken::InvalidToken;
-        bool isPossible = _prevValue != ")" && _prevValue != "(";
+        bool isDoubleOperator = this->isOperator(_prevValue);
+        bool isPossible = !this->isOpenAndCloseParenthesis(_prevValue);
         if(_prevValue.length() == 1){
             c = _prevValue[0];
-            isOperator = this->isOperator(c) != LanguageToken::InvalidToken;
+            isOperator = this->isOperator(c);
             isDoubleOperator = false;
         }
 
@@ -395,36 +387,71 @@ private:
         return false;
     }
 
+// Auxillary Getters
+private:
+
     // Check if the character is a valid identifier
-    LanguageToken isIdentifier(char c){
+    LanguageToken getIdentifier(char c){
         auto alphabet = this->_languageDictionary->getAlphabet();
         return alphabet.find(c) != alphabet.end() ? alphabet[c] : LanguageToken::InvalidToken;
     }
 
     
     // Check if the character is a valid digit
-    LanguageToken isDigit(char c){
+    LanguageToken getDigit(char c){
         auto numberAlphabet = this->_languageDictionary->getNumberAlphabet();
         return numberAlphabet.find(c) != numberAlphabet.end() ? numberAlphabet[c] : LanguageToken::InvalidToken;
     }
     
     // Check if the character is a valid operator
-    LanguageToken isOperator(char c){
+    LanguageToken getOperator(char c){
         auto alphabet = this->_languageDictionary->getOperatorAlphabet();
         std::string str = std::string(1,c);
         return alphabet.find(str) != alphabet.end() ? alphabet[str] : LanguageToken::InvalidToken;
     }
 
-    LanguageToken isOperator(std::string str){
+    LanguageToken getOperator(std::string str){
         auto alphabet = this->_languageDictionary->getOperatorAlphabet();
         return alphabet.find(str) != alphabet.end() ? alphabet[str] : LanguageToken::InvalidToken;
     }
    
     // Check if the character is a valid keyword
-    LanguageToken isKeyword(std::string str){
+    LanguageToken getKeyword(std::string str){
         auto keywords = this->_languageDictionary->getLanguageKeywords();
         return keywords.find(str) != keywords.end() ? keywords[str] : LanguageToken::InvalidToken;;
     }
+
+// Auxillary Checkers
+private:
+
+    bool isIdentifier(char c){
+        return this->getIdentifier(c) != LanguageToken::InvalidToken;
+    }
+
+    bool isDigit(char c){
+        return this->getDigit(c) != LanguageToken::InvalidToken;
+    }
+
+    bool isOperator(char c){
+        return this->getOperator(c) != LanguageToken::InvalidToken;
+    }
+
+    bool isOperator(std::string str){
+        return this->getOperator(str) != LanguageToken::InvalidToken;
+    }
+
+    bool isKeyword(std::string str){
+        return this->getKeyword(str) != LanguageToken::InvalidToken;
+    }
+
+    bool isOpenAndCloseParenthesis(char c){
+        return c == '(' || c == ')';
+    }
+
+    bool isOpenAndCloseParenthesis(std::string str){
+        return str == "(" || str == ")";
+    }
+
 
 // Others
 private:
@@ -465,6 +492,17 @@ private:
             std::cout << "[/] Successfuly Closed the file [" << filename << "]" << std::endl;
 #endif
         }
+    }
+
+// Quality of Life
+private:
+    void setPreviousValues(LanguageToken token, std::string value){
+        _prevToken = token;
+        _prevValue = value;
+    }
+
+    void insertInAST(LanguageToken token, std::string value){
+        _ast->insert(token, value, _line, _column);
     }
 
 };
