@@ -32,7 +32,7 @@ Store and maintain information amongst the classes. This include creating, delet
 #### Constructor
 
 * `SymbolTable()`
-    * Private Constructor to deploy a singleton class.
+    * Private Constructor to deploy a singleton class. Initializes the symbol table.
 
 * `SymbolTable(SymbolTable const&)`
     * Private Copy Constructor to avoid multiple copy of the class.
@@ -40,7 +40,7 @@ Store and maintain information amongst the classes. This include creating, delet
 #### Methods
 
 * `void operator=(SymbolTable const&) = delete`
-    * Deleted assignment operator since the SymbolTable is a sigleton.
+    * Deleted assignment operator since the SymbolTable is a singleton.
 
 * `static SymbolTable& getInstance(){`
     * Ensures that there's only one instance of the class and returns it.
@@ -328,8 +328,68 @@ It performs syntax analysis on lines of code. This includes detecting, ensuring 
 
 ### Interpreter
 
+This interprets and executes the code. Its functionalities includes interpretation of abstract syntax trees, mathematical expressions, variable handling, I/O handling, conditionals, and error handling.   
 
+#### Constructors
 
+* ` Interpreter()`
+    * Private Constructor to deploy a singleton class.
+
+* `Interpreter(const Interpreter&) = delete`
+    * Deletes the copy constructor to prevent the creation of multiple copies of the class.
+
+#### Methods
+
+* `Interpreter& operator=(const Interpreter&) = delete`
+    * Deleted assignment operator since the Interpreter is a singleton.
+
+* `static Interpreter& getInstance()`
+    * Ensures that there's only one instance of the class and returns it.
+
+* `void interpret(AuxillaryTree* &tree, bool isInterpretAll = false)`
+    * Processes an abstract syntax tree. It evaluates various language tokens and executes math operations, assignments, input/output, conditions, and variable declarations.
+
+* `void handleIfCondition(AuxillaryTree* tree)`
+    * Handles "if" conditions. Checks condition and executing the enclosed statements if the condition evaluates to true.
+
+* `bool handleCondition(AuxillaryTree* tree)`
+    * Evaluates conditions by comparing values or expressions.
+
+* `void handleOutput(AuxillaryTree* tree)`
+    * Handles different cases of output operations and prints the appropriate values to the console. This includes printing strings, variable, and numeric values.
+
+* `void handleInput(AuxillaryTree* &tree)`
+    * Handles reading input and storing it in the correct variable based on the variable's type.
+
+* `void handleDeclaration(AuxillaryTree* &tree)`
+    * Handles variable declarations by identifying their data type, creating instances of corresponding data type classes, and managing their scope.
+
+* `void handleAssignment(AuxillaryTree* &tree)`
+    * Handles variable assignments by evaluating mathematical expressions on the right-hand side and updating the assigned variable's value.
+
+* `double evaluateMathematicalExpression(AuxillaryTree* &tree)`
+    * Calculates the result of a mathematical expression found in the provided tree, considering various mathematical operations and variable values.
+
+* `bool isDigit(std::string value)`
+    * Checks if the first character of a string value is a digit.
+
+* `bool isDigit(char value)`
+    * Checks if a given character is a digit by comparing it to a set of valid digits defined in the _languageDictionary.
+
+* `bool isIdentifier(std::string value)`
+    * Checks if the first character of a string value is a valid identifier. Compares it to a set of valid identifier characters defined in the _languageDictionary. 
+
+* `bool isIdentifier(char value)`
+    * Checks if a given character is valid. Compares it to a set of valid identifier characters defined in the _languageDictionary.
+
+* `LanguageToken getNumberType(AuxillaryTree* &tree)`
+    * Checks the _token of the provided tree and returns the corresponding numeric type. if it doesn't match, it throws a runtime error that says "Invalid Number Type."
+
+* `void deleteReplaceTree(AuxillaryTree* &tree, LanguageToken token, std::string value)`
+    * It updates the content of an AuxillaryTree node with new values and clears any related existing data.
+
+* `std::string getTreeValues(AuxillaryTree* &tree)`
+    * It builds and returns a string by combining the values of an AuxillaryTree and its child nodes through recursive traversal.
 
 
 ## Variables
@@ -342,6 +402,61 @@ It performs syntax analysis on lines of code. This includes detecting, ensuring 
 
 * `std::ofstream _file`
     * Declares a variable named _file as an output file stream.
+
+* `std::string _filename = "test.txt`
+    * Initializes a variable _filename with the value "test.txt". Sets the default filename.
+
+* `std::string _outfile = "NOSPACES.txt"`
+    * Initializes a variable _outfile with the value "NOSPACES.txt". Sets the default filename.
+
+* `std::ifstream _file`
+    * Declares a variable _file with input file stream. It is for reading data from an input file.
+
+* `std::ofstream _oFile`
+    * Declares a variable _oFile with an output file stream. It is used for writing data to an output file.
+
+* `int _line`
+    * Records the current line number in the input file for error handling.
+
+* `int _column`
+    * Records the current column number in the input file for error handling.
+
+* `int _errorCount`
+    * Records current error count for the file.
+
+* `std::string _totalStringNoSpace = ""`
+    * Stores a string without spaces. Used for further processing and output file.
+
+* `LanguageToken _prevToken = LanguageToken::InvalidToken`
+    * Records the previous language token. Used for sign identification.
+
+* `std::string _prevValue = ""`
+    * Initialized with an empty string. Records the previous value and used for sign identification.  
+
+* `bool _hasEndedSuccessfully = false`
+    * Initially set to false. Indicates whether the file has ended successfully with a semicolon.
+
+* `std::string _errorLogPath = "ERROR.log"`
+    * Private string variable that represents the path to the error log file.
+
+* `std::ofstream _errorLog`
+    * Private instance of the std::ofstream class, used for writing error messages to a file.
+
+* `bool _isDebug = true`
+    * Private boolean variable that indicates whether the code is in debug mode or not.
+
+* `std::string _errorString = ""`
+    * Private string variable used to store error messages.
+
+* `bool _hasError = false`
+    * Private boolean variable that indicates whether an error has occurred.
+
+* `bool _hasAlreadyDisplayed = false`
+    * Private boolean variable used to keep track of whether an error has already been displayed.
+
+* `int _errorCount = 0`
+    * Private integer variable that keeps count of the number of errors.
+
 
 #### Auxillary Class: ObjectType
 
