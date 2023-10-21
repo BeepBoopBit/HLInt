@@ -324,6 +324,24 @@ It performs syntax analysis on lines of code. This includes detecting, ensuring 
 
 ### AbstractSyntaxTree
 
+A data structure that represents the abstract syntactic structure of source code. It parses and represents the structure of the source code by inserting tokens into the tree.
+
+#### Constructors
+
+* `AST()`
+    * Private Constructor to deploy a singleton class.
+
+* `AST(AST const&) = delete`
+    * Deletes the copy constructor to prevent the creation of multiple copies of the class.
+
+#### Methods
+
+* `Interpreter& operator=(const Interpreter&) = delete`
+    * Removes assignment operator since the AST is a singleton.
+
+* `static AST& getInstance()`
+    * Ensures that there's only one instance of the class and returns it.
+
 
 
 ### Interpreter
@@ -437,7 +455,7 @@ This interprets and executes the code. Its functionalities includes interpretati
     * Initially set to false. Indicates whether the file has ended successfully with a semicolon.
 
 * `std::string _errorLogPath = "ERROR.log"`
-    * Private string variable that represents the path to the error log file.
+    * Private string variable initialized with a string value "ERROR.log" and represents the path to the error log file.
 
 * `std::ofstream _errorLog`
     * Private instance of the std::ofstream class, used for writing error messages to a file.
@@ -456,6 +474,42 @@ This interprets and executes the code. Its functionalities includes interpretati
 
 * `int _errorCount = 0`
     * Private integer variable that keeps count of the number of errors.
+
+* `ErrorHandler* _errorHandler = &ErrorHandler::getInstance()`
+    * It's used to log errors.
+
+* `LanguageDictionary* _languageDictionary = &LanguageDictionary::getInstance()`
+    * It's used to get the tokens
+
+* `SymbolTable* _symbolTable = &SymbolTable::getInstance()`
+    * It's used to store the variables.
+
+* `int _parenthesisCount = 0`
+    * This is an integer used to check if the parenthesis are balanced.
+
+* `AuxillaryTree* _root = nullptr`
+    * This is a pointer to the root of the tree.
+
+* `std::vector<AuxillaryTree*> _totalityTree`
+    * It contains all the statement trees from all lines.
+
+* `std::vector<AuxillaryTree*> _smallTrees`
+    * It contains the statement trees from a single line.
+
+* `AuxillaryTree* _latestSmallTree = nullptr`
+    * This is a pointer to the latest small tree. It's used to push the small tree to the totality tree.
+
+* `int _currentSmallTreeIndex = 0`
+    * This is an integer used to push the small tree to the totality tree.
+
+* `int _line = 0`
+    * This is an integer used for better error handling. It represents the current line.
+
+* `int _column = 0`
+    * This is an integer used for better error handling. It represents the current column.
+
+* `bool _isConditional = false`
+    * This is a boolean used to check if the current small tree is a conditional statement.
 
 
 #### Auxillary Class: ObjectType
@@ -516,7 +570,7 @@ Provides a basic framework for handling mathematical operators, data type declar
 ##### Operators
 
 * It defines the operators used and how they behave within the program. This includes the assignment, addition, subtraction, multiplication, and division.
-    * The process has three classes: ObjectTypeInt (deals with integer values), ObjectTypeDouble (deals with double values) and ObjectTypeString (deals with srting values).
+    * The process has three classes: ObjectTypeInt (deals with integer values), ObjectTypeDouble (deals with double values) and ObjectTypeString (deals with string values).
     * Under the following arithmetic operators such as +, -, *, /, the proccess done in (int values) is applied to both (double values) and (string values). 
 
 ###### Assignment
