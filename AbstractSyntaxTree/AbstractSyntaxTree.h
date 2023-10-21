@@ -119,16 +119,31 @@ public:
             if(this->isDoubleOperator(_latestSmallTree->_value) || this->isKeyword(_latestSmallTree->_value)){
                 _smallTrees.push_back(_latestSmallTree);
                 _latestSmallTree = new AuxillaryTree(token, value, line, column);
-            }
-            else if(_latestSmallTree->_left == nullptr){
-                _latestSmallTree->_left = new AuxillaryTree(token, value, line, column);
-            }else{
-                AuxillaryTree *tempTree = _latestSmallTree;
-                while(tempTree->_right != nullptr){
-                    tempTree = tempTree->_right;
+            }else if(_smallTrees.size() > 1){
+                if(_latestSmallTree->_right== nullptr){
+                    _latestSmallTree->_right= new AuxillaryTree(token, value, line, column);
+                }else if(_latestSmallTree->_left == nullptr){
+                    _latestSmallTree->_left = new AuxillaryTree(token, value, line, column);
                 }
-                tempTree->_right = new AuxillaryTree(token, value, line, column);
+                else{
+                    AuxillaryTree *tempTree = _latestSmallTree;
+                    while(tempTree->_right != nullptr){
+                        tempTree = tempTree->_right;
+                    }
+                    tempTree->_right = new AuxillaryTree(token, value, line, column);
+                }
+            }else{
+                if(_latestSmallTree->_left == nullptr){
+                    _latestSmallTree->_left = new AuxillaryTree(token, value, line, column);
+                }else{
+                    AuxillaryTree *tempTree = _latestSmallTree;
+                    while(tempTree->_right != nullptr){
+                        tempTree = tempTree->_right;
+                    }
+                    tempTree->_right = new AuxillaryTree(token, value, line, column);
+                }
             }
+            
         }
     }
 

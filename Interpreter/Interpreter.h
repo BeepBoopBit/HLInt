@@ -359,9 +359,11 @@ private:
                 nextIsASign = true;
             }else if(token == "*"){
                 typeOfOperation = 2;
+                signModifier = 1;
                 nextIsASign = true;
             }else if(token == "/"){
                 typeOfOperation = 3;
+                signModifier = 1;
                 nextIsASign = true;
             }
             token ="";
