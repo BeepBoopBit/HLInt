@@ -645,6 +645,7 @@ private:
             case LanguageToken::NumberDoubleToken:
             case LanguageToken::LiteralToken:
             case LanguageToken::OutputToken:
+            case LanguageToken::InputToken:
                 if(this->expect(tree, &AST::isNull)){
                     isCorrect = true;
                 }
@@ -674,7 +675,12 @@ private:
                 if(this->expect(tree, &AST::isKeyword ,&AST::isPrintable)){
                     isCorrect = true;
                 }
-
+                break;
+            case LanguageToken::RightShiftToken:
+                //this->expect(tree, &AST::isInputable);
+                if(this->expect(tree, &AST::isKeyword ,&AST::isInputable)){
+                    isCorrect = true;
+                }
                 break;
             case LanguageToken::IfToken:
                 //this->expect(tree, &AST::isConditional, &AST::isAStatement);
@@ -684,6 +690,7 @@ private:
                 break;
             case LanguageToken::TypeIntegerToken:
             case LanguageToken::TypeDoubleToken:
+            case LanguageToken::TypeStringToken:
                 // Consider only the left side of the tree
                 //this->expect(tree, &AST::declarable, 1);
                 if(this->expect(tree, &AST::declarable,1)){
@@ -841,6 +848,17 @@ private:
         return false;
     }
 
+    bool isInputable(AuxillaryTree *tree){
+        if(tree == nullptr){
+            return false;
+        }
+        bool firstRule = tree->_token == LanguageToken::IdentifierToken;
+        if(firstRule){
+            return true;
+        }
+        return false;
+    }
+
     bool declarable(AuxillaryTree *tree){
         if(tree == nullptr){
             return false;
@@ -860,7 +878,8 @@ private:
         }
         bool firstRule = tree->_token == LanguageToken::IfToken;
         bool secondRule = tree->_token == LanguageToken::OutputToken;
-        if(firstRule || secondRule){
+        bool thirdRule = tree->_token == LanguageToken::InputToken;
+        if(firstRule || secondRule || thirdRule){
             return true;
         }
         return false;
