@@ -71,6 +71,8 @@ output << 10/(2+3)*8
 output << 10/2*8
 ```
 
+Note: There is currently no support on string operations
+
 ### Supported Literals
 
 There are multiple literals that the language accepts:
