@@ -89,62 +89,35 @@ public:
         _column = column;
 
         bool isConditional = false;
-        if((token == LanguageToken::OpenParenthesisToken) || (isConditional = isConditionalOperator(value))){
+        bool isTokenAffectingOrderOfOperation = (token == LanguageToken::OpenParenthesisToken) || (isConditional = this->isConditionalOperator(value));
+        bool isCloseParenthesis = token == LanguageToken::CloseParenthesisToken;
+
+        // If the token can affect the order of operation, then we need to do some special processing
+        if(isTokenAffectingOrderOfOperation){
             processParenthesisOrOperator(token, value, isConditional);
             return;
-        }else if(token == LanguageToken::CloseParenthesisToken){
+        }else if(isCloseParenthesis){
             processCloseParenthesis(token, value);
             return;
         }
+
         // If the token is end of statement, then we need to merge the small trees and append it to the latest node of the main tree
-        if(token == LanguageToken::EndOfStatementToken){
+        bool isEndOfStatement = token == LanguageToken::EndOfStatementToken;
+        if(isEndOfStatement){
             processEndOfStatement();
             return;
         }
-
+        
+        // If the tree is empty, then we need to create a new tree
         if(_latestSmallTree == nullptr){
-            _latestSmallTree = new AuxillaryTree(token, value, line, column);
+            _latestSmallTree = createTree(token, value);
             return;
         }
- 
-
-        if(isOperator(value) || isKeyword(value)){
-            _latestSmallTree = processOperator(token, value, _latestSmallTree);
-            if(this->isDoubleOperator(_latestSmallTree->_value)){
-                _smallTrees.push_back(_latestSmallTree);
-                _latestSmallTree = nullptr;
-            }
-        }
+        // Otherwise, we need to process the token
         else{
-            if(this->isDoubleOperator(_latestSmallTree->_value) || this->isKeyword(_latestSmallTree->_value)){
-                _smallTrees.push_back(_latestSmallTree);
-                _latestSmallTree = new AuxillaryTree(token, value, line, column);
-            }else if(_smallTrees.size() > 1){
-                if(_latestSmallTree->_right== nullptr){
-                    _latestSmallTree->_right= new AuxillaryTree(token, value, line, column);
-                }else if(_latestSmallTree->_left == nullptr){
-                    _latestSmallTree->_left = new AuxillaryTree(token, value, line, column);
-                }
-                else{
-                    AuxillaryTree *tempTree = _latestSmallTree;
-                    while(tempTree->_right != nullptr){
-                        tempTree = tempTree->_right;
-                    }
-                    tempTree->_right = new AuxillaryTree(token, value, line, column);
-                }
-            }else{
-                if(_latestSmallTree->_left == nullptr){
-                    _latestSmallTree->_left = new AuxillaryTree(token, value, line, column);
-                }else{
-                    AuxillaryTree *tempTree = _latestSmallTree;
-                    while(tempTree->_right != nullptr){
-                        tempTree = tempTree->_right;
-                    }
-                    tempTree->_right = new AuxillaryTree(token, value, line, column);
-                }
-            }
-            
+            processToken(token, value);
         }
+        
     }
 
     void evaluateTree(){
@@ -163,14 +136,11 @@ public:
 // Others
 public:
 
-    
     void print(){
         for(int i = 0; i < _totalityTree.size(); ++i){
             std::cout << "\n#################### Totality [" << i << "] ####################\n";
             printBT(_totalityTree[i]);
             std::cout << "#################### Summary [" << i << "] ####################\n";
-            std::cout << summarizeTree(_totalityTree[i]) << '\n';
-            std::cout << "#################### Summarized [" << i << "] ####################\n";
         }
         std::cout << "TESTING" << std::endl;
     }
@@ -211,6 +181,45 @@ private:
 
 // Processes
 private:
+    void processToken(LanguageToken& token, std::string& value){
+        if(isOperator(value) || isKeyword(value)){
+            _latestSmallTree = processOperator(token, value, _latestSmallTree);
+            if(this->isDoubleOperator(_latestSmallTree->_value)){
+                _smallTrees.push_back(_latestSmallTree);
+                _latestSmallTree = nullptr;
+            }
+        }
+        else{
+            if(this->isDoubleOperator(_latestSmallTree->_value) || this->isKeyword(_latestSmallTree->_value)){
+                _smallTrees.push_back(_latestSmallTree);
+                _latestSmallTree = createTree(token, value);
+            }else if(_smallTrees.size() > 1){
+                if(_latestSmallTree->_right== nullptr){
+                    _latestSmallTree->_right = createTree(token, value);
+                }else if(_latestSmallTree->_left == nullptr){
+                    _latestSmallTree->_left = createTree(token, value);
+                }
+                else{
+                    AuxillaryTree *tempTree = _latestSmallTree;
+                    while(tempTree->_right != nullptr){
+                        tempTree = tempTree->_right;
+                    }
+                    tempTree->_right = createTree(token, value);
+                }
+            }else{
+                if(_latestSmallTree->_left == nullptr){
+                    _latestSmallTree->_left = createTree(token, value);
+                }else{
+                    AuxillaryTree *tempTree = _latestSmallTree;
+                    while(tempTree->_right != nullptr){
+                        tempTree = tempTree->_right;
+                    }
+                    tempTree->_right = createTree(token, value);
+                }
+            }
+        }
+    }
+
     AuxillaryTree* processOperator(LanguageToken token, std::string value, AuxillaryTree* tree){
         
         // Rules for opeartors and keywords
@@ -227,19 +236,18 @@ private:
 
             // Then we need to replace the latest small tree with the new tree as its parent 
             AuxillaryTree* newTree = tree;
-            tree = new  AuxillaryTree(token, value, tree->_line, tree->_column);
+            tree = createTree(token, value, tree->_line, tree->_column);
             tree->_left = newTree;
         }else{
             // Otherwise, check what kind of operation we are dealing with
             if(this->isMultiplicationOrDivision(token) && (!this->isMultiplicationOrDivision(_latestSmallTree->_token))){
-            //if(token == LanguageToken::MultiplicationToken){
                 
                 // Go the left most side of the tree
                 AuxillaryTree* tempTreeParent = tree;
                 AuxillaryTree* tempTree = tree->_right;
                 if(tempTree == nullptr){
                     // Otherwise, we need make the new created tree the parent of the latest small tree
-                    AuxillaryTree* newTree = new AuxillaryTree(token, value, tree->_line, tree->_column);
+                    AuxillaryTree* newTree = createTree(token, value, tree->_line, tree->_column);
                     newTree->_left = tree;
                     tree = newTree;
                     return tree;
@@ -251,13 +259,13 @@ private:
                     tempTree = tempTree->_left;
                 }
 
-                AuxillaryTree* newTree = new AuxillaryTree(token, value, tree->_line, tree->_column);
+                AuxillaryTree* newTree = createTree(token, value, tree->_line, tree->_column);
                 newTree->_left = tempTree;
                 tempTreeParent->_right= newTree;
                 return tempTreeParent;
             }else{
                 // Otherwise, we need make the new created tree the parent of the latest small tree
-                AuxillaryTree* newTree = new AuxillaryTree(token, value, tree->_line, tree->_column);
+                AuxillaryTree* newTree = createTree(token, value, tree->_line, tree->_column);
                 newTree->_left = tree;
                 tree = newTree;
                 return tree;
@@ -561,7 +569,7 @@ private:
         // If the latest small tree is null and it's a conditional conditional, create a new small tree
         if(_latestSmallTree == nullptr && isConditional){
             // This is done so that the conditional statement wouldn't merge without the next part of the condition is read
-            _smallTrees.push_back(new AuxillaryTree(token,value, _line, _column));
+            _smallTrees.push_back(createTree(token, value));
             return;
         }
             
@@ -584,7 +592,7 @@ private:
             if(_isConditional){
                 // Create a new small tree base on the current token and value.
                 // This is done to ensure the presedence of the conditional statement whilst making sure that the next part of the condition is with correct precedence
-                _latestSmallTree = new AuxillaryTree(token, value, _line, _column);
+                _latestSmallTree = createTree(token, value);
                 _smallTrees.push_back(_latestSmallTree);
                 _latestSmallTree = nullptr;
             }
@@ -596,33 +604,14 @@ private:
 // Others
 private:
 
-    // Summarize and get all the  value of the tree
-    std::string summarizeTree(AuxillaryTree* &tree){
-        std::string total_string = "";
-        if(tree == nullptr){
-            return total_string;
-        }
-        total_string += summarizeTree(tree->_left);
-        total_string += tree->_value;
-        total_string += summarizeTree(tree->_right);
-        return total_string;
-    }
-    
-    // Auxillaray function to summarize the value of the tree
-    void summarizeTreeValue(AuxillaryTree* &tree){
-        if(tree == nullptr){
-            return;
-        }
-        summarizeTreeValue(tree->_left);
-        summarizeTreeValue(tree->_right);
-    }
- 
     // Auxillary function to evaluate the tree
     bool evaluateTree(AuxillaryTree*& tree){
         if(tree == nullptr){
             return true;
         }
-        //std::cout << "[PROCESSING] " << tree->_value << '\n';
+#ifdef DEBUG
+        std::cout << "[PROCESSING] " << tree->_value << '\n';
+#endif
         bool process = processEvaluation(tree);
         bool lhs = evaluateTree(tree->_left);
         bool rhs = evaluateTree(tree->_right);
@@ -696,25 +685,6 @@ private:
                 if(this->expect(tree, &AST::declarable,1)){
                     isCorrect = true;
                 }
-                break;
-            // Non-Existent or Non-Essential Tokens
-            case LanguageToken::EqualToken:
-                throw std::runtime_error("Equal Token is not a valid token. Please Check the Lexer");
-                break;
-            case LanguageToken::RootNode:
-                std::cout << "[DEBUG] Reach Root Node" << std::endl;
-                break;
-            case LanguageToken::OpenParenthesisToken:
-                throw std::runtime_error("Open Parenthesis should not be in the Tree. Please Check the Lexer");
-                break;
-            case LanguageToken::CloseParenthesisToken:
-                throw std::runtime_error("Close Parenthesis should not be in the Tree. Please Check the Lexer");
-                break;
-            case LanguageToken::QuoteToken:
-                throw std::runtime_error("Quote Token Should not be in the Tree. Please Check the Lexer");
-                break;
-            case LanguageToken::InvalidToken:
-                throw std::runtime_error("Invalid Token");
                 break;
             default:
                 break;
@@ -827,9 +797,7 @@ private:
         bool fifthRule = tree->_token == LanguageToken::AdditionToken;
         bool sixthRule = tree->_token == LanguageToken::SubtractionToken;
         bool seventhRule = this->isMultiplicationOrDivision(tree->_token);
-        //bool seventhRule = tree->_token == LanguageToken::MultiplicationToken;
-        // We can add Strings
-        bool eightRule= tree->_token == LanguageToken::StringToken;
+        bool eightRule= tree->_token == LanguageToken::StringToken; // We can add Strings
         if(firstRule || secondRule || thirdRule || fourthRule || fifthRule || sixthRule || seventhRule || eightRule){
             return true;
         }
@@ -898,6 +866,9 @@ private:
 
 private:
 
+
+// Pretty Print the Tree for Debug
+private:
     // Reference: https://stackoverflow.com/questions/36802354/print-binary-tree-in-a-pretty-way-using-c
     void printBT(const std::string& prefix, const AuxillaryTree* node, bool isLeft)
     {
@@ -921,6 +892,9 @@ private:
         printBT("", node, false);    
     }
 
+// Checkers
+private:
+
     bool isDoubleOperator(std::string value){
         auto alphabet = _languageDictionary->getDoubleOperator();
         return alphabet.find(value) != alphabet.end();
@@ -943,6 +917,16 @@ private:
 
     bool isMultiplicationOrDivision(LanguageToken token){
         return token == LanguageToken::MultiplicationToken || token == LanguageToken::DivisionToken;
+    }
+// others
+private:
+    AuxillaryTree* createTree(LanguageToken& token, std::string& value){
+        AuxillaryTree* tree = new AuxillaryTree(token, value, _line, _column);
+        return tree;
+    }
+    AuxillaryTree* createTree(LanguageToken& token, std::string& value, int line, int column){
+        AuxillaryTree* tree = new AuxillaryTree(token, value, line, column);
+        return tree;
     }
 };
 
