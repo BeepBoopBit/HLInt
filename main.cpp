@@ -7,10 +7,12 @@ int main(int argc, char** argv){
         std::cout << "Please provide the file name. Going to default 'test.txt'" << std::endl;
         HLint* hlint = new HLint("test.txt");
         hlint->start();
+        delete hlint;
     }else{
         std::string filename = argv[1];
         HLint* hlint = new HLint(filename);
         hlint->start();
+        delete hlint;
     }
 }
 
