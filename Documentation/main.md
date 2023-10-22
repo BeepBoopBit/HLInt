@@ -66,12 +66,6 @@ Store and maintain information amongst the classes. This include creating, delet
 * `ObjectTypeString* parseToString(ObjectType *variable)`
     * Converts a variable to a string type and returns it. If conversion is not possible, it prints an error message and returns 'nullptr'.
 
-* `void writeToFile()`
-    * Writes the contents of the variableTable to a file in a specific format. This includes saved information about integer and double variables.
-
-* `void saveToFile()`
-    * Saves the symbol table to a file and closes the file.
-
 ##### Debug
 
 * `void printVariableTable()`
