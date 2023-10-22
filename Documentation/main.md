@@ -204,15 +204,15 @@ Serves as a data structure. It stores language-related tokens, keywords, and cha
     * Private Constructor to deploy a singleton class.
 
 * `LanguageDictionary(LanguageDictionary const&)` 
-    * Prevents the creation of new instances by deleting both the copy constructor and the assignment operator.
+    * Prevents the creation of new instances by deleting copy constructor.
 
 #### Methods
 
+* `void operator=(LanguageDictionary const&)`
+    * Deleted assignment operator since the LanguageDictionary is a singleton.
+
 * `static LanguageDictionary& getInstance()`
     * Ensures that there is only one instance of the LanguageDictionary class.
-
-* `std::string getTokenName(LanguageToken token)`
-    * Returns the name of a language token as a string, to easily identify tokens.
 
 * `std::map<std::string, LanguageToken>& getLanguageKeywords()`
     * Provieds access and returns a map of language keywords.
@@ -260,7 +260,7 @@ Serves as a data structure. It stores language-related tokens, keywords, and cha
 #### Keywords
 
 * `std::map<std::string, LanguageToken> _languageKeywords`
-    * This contains the keywords of the langugae such as (if, integer, double, and output).
+    * This contains the keywords of the langugae such as (if, integer, double, output, input, and string).
 
 
 ### SyntaxAnalyzer
@@ -649,6 +649,9 @@ Facilitate the execution and management of test cases.
 
 * `std::string _parentDir = "../TestCases/";`
     * Initializes a variable _parentDir with the string value "../TestCases/".
+
+* `std::vector<std::string> token_to_String`
+    * It is a vector used to map between token enumerators and their corresponding string names.
 
 
 #### Auxillary Class: AuxillaryTree
