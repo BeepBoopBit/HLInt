@@ -140,7 +140,9 @@ private:
         // Interpret LHS and RHS to get the smallest unit of value
         interpret(lhs, true);
         interpret(rhs, true);
-        return evaluateComparison(tree->_token, lhs->_value, rhs->_value);
+        double lhsValue = evaluateMathematicalExpression(lhs);
+        double rhsValue = evaluateMathematicalExpression(rhs);
+        return evaluateComparison<double>(tree->_token, lhsValue, rhsValue);
     }
     void handleOutput(AuxillaryTree* tree){
         // Tree Token will always be <<
