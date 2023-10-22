@@ -70,7 +70,6 @@ public:
     ~LexicalAnalyzer(){
         this->closeFiles(0, _filename);                                    // Close the input file to avoid memory leak
         this->closeFiles(1, _outfile);                                     // Close the output file to avoid memory leak
-        (&SymbolTable::getInstance())->saveToFile();                        // Save the Symbols in the Default File
     }
 
 // Methods

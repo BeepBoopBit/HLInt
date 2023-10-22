@@ -22,7 +22,7 @@ public:
 private:
     SymbolTable*            _symbolTable            = &SymbolTable::getInstance();          // The symbol table
     LanguageDictionary*     _languageDictionary     = &LanguageDictionary::getInstance();   // The language dictionary
-
+    
     // Temporary Support for One Way If
     // Will be removed after the implementation of scopes
     bool _inIfScope = false;

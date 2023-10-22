@@ -3,6 +3,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 // Contains all the tokens and language keywords
 class LanguageDictionary{
@@ -44,6 +45,42 @@ public:
         InputToken,
         RightShiftToken,
         TypeStringToken
+    };
+    
+    // For RES_SYM.txt
+    std::vector<std::string> token_to_String = { 
+        "CharacterToken",
+        "IdentifierToken",
+        "NumberToken",
+        "StringToken",
+        "AdditionToken",
+        "SubtractionToken",
+        "AssignmentToken",
+        "EndOfStatementToken",
+        "ColonToken",
+        "InvalidToken",
+        "QuoteToken",
+        "LeftShiftToken",
+        "LessThanToken",
+        "GreaterThanToken",
+        "EqualityToken",
+        "NotEqualToken",
+        "IfToken",
+        "OpenParenthesisToken",
+        "CloseParenthesisToken",
+        "LiteralToken",
+        "TypeIntegerToken",
+        "TypeDoubleToken",
+        "OutputToken",
+        "RootNode",
+        "MultiplicationToken",
+        "NumberIntegerToken",
+        "NumberDoubleToken",
+        "EqualToken",
+        "DivisionToken",
+        "InputToken",
+        "RightShiftToken",
+        "TypeStringToken"
     };
 private:
     LanguageDictionary(){}

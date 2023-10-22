@@ -40,7 +40,9 @@ class AST{
 
 // Constructors and Deconstructor
 private:
-    AST(){}
+    AST(){
+        _file.open(_filename);
+    }
     ~AST(){}
 
 // Implementing Singleton
@@ -77,8 +79,8 @@ private:
     int                             _line                   = 0;                                // The current line. Used for better error handling
     int                             _column                 = 0;                                // The current column. Used for better error handling
     bool                            _isConditional          = false;                            // Used to check if the current small tree is a conditional statement
-
-
+    std::ofstream                   _file;                                                      // The file to write to
+    std::string                     _filename               = "RES_SYM.txt";                    // The file name
 
 public:
     // Value can be empty
@@ -103,8 +105,6 @@ public:
         }else{
             processToken(token, value);
         }
- 
-        
     }
 private:
     void processToken(LanguageToken &token, std::string &value){
@@ -158,6 +158,7 @@ public:
 #endif
             }
         }
+        _file.close();
     }
 
 // Others
@@ -596,6 +597,7 @@ private:
             return true;
         }
         //std::cout << "[PROCESSING] " << tree->_value << '\n';
+        _file << _languageDictionary->token_to_String[tree->_token] << ": " << tree->_value << '\n';
         bool process = processEvaluation(tree);
         bool lhs = evaluateTree(tree->_left);
         bool rhs = evaluateTree(tree->_right);
