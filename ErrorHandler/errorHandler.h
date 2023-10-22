@@ -14,13 +14,12 @@ class ErrorHandler{
 private:
     using LanguageToken = LanguageDictionary::LanguageToken;
 private:
-    std::string _errorLogPath = "ERROR.log";
-    std::ofstream _errorLog;
-    bool _isDebug = true;
-    std::string _errorString = "";
-    bool _hasError = false;
-    bool _hasAlreadyDisplayed = false;
-    int _errorCount = 0;
+    std::string     _errorLogPath           = "ERROR.log";          // Default error log path
+    std::ofstream   _errorLog;
+    std::string     _errorString            = "";                   // The error string that will be displayed
+    bool            _hasError               = false;                // If there is an error
+    bool            _hasAlreadyDisplayed    = false;                // If the error has already been displayed
+    int             _errorCount             = 0;                    // The number of errors
 
 private:
     ErrorHandler(){
@@ -72,9 +71,9 @@ public:
         return _hasError;
     }
     void displaySuccess(std::string at, std::string message){
-        if(_isDebug){
+#ifdef DEBUG
             std::cout << "[SUCCESS] " << at << ": " << message << std::endl;
-        }
+#endif
     }
 
     void addError(std::string error){
@@ -91,14 +90,6 @@ public:
 
     int getErrorCount(){
         return _errorCount;
-    }
-
-// Debug
-private:
-    void _debug(std::string message){
-        if(_isDebug){
-            _errorString += "[DEBUG] " + message + "\n";
-        }
     }
 };
 

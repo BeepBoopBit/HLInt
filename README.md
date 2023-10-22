@@ -12,12 +12,14 @@ There are only two supported data types currently.
 
 * Integer
 * Double
+* String
 
 You can declare them as follows:
 
 ```
 x: integer;
 y: double;
+z: string;
 ```
 
 ### Assignmenet
@@ -28,6 +30,8 @@ The language also supports assignment operations.
 x := 1 + 2 + 3;
 y := x + 2;
 ```
+
+Note: Assignment in string is currently not supported. To store information in it, you gonna do it using the `input` keyword.
 
 ### One-Way If
 
@@ -55,6 +59,16 @@ output << y;
 output << x + y;
 ```
 
+### Input
+
+Input is now a supported operation
+
+```
+z: string;
+input >> z;
+output << z;
+```
+
 ### Mathematical Evaluation
 
 Evaluation of mathematical operation is support with the order of operation. Currently we support:
@@ -70,6 +84,8 @@ output << (10/2) + (3*8);
 output << 10/(2+3)*8
 output << 10/2*8
 ```
+
+Note: There is currently no support on string operations
 
 ### Supported Literals
 

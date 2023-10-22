@@ -89,26 +89,27 @@ public:
         _column = column;
 
         bool isConditional = false;
-        if((token == LanguageToken::OpenParenthesisToken) || (isConditional = isConditionalOperator(value))){
-            processParenthesisOrOperator(token, value, isConditional);
-            return;
-        }else if(token == LanguageToken::CloseParenthesisToken){
-            processCloseParenthesis(token, value);
-            return;
-        }
-        // If the token is end of statement, then we need to merge the small trees and append it to the latest node of the main tree
-        if(token == LanguageToken::EndOfStatementToken){
-            processEndOfStatement();
-            return;
-        }
+        bool isTokenAffectsOrderOfOperation = (token == LanguageToken::OpenParenthesisToken) || (isConditional = isConditionalOperator(value));
+        bool isCloseParenthesis = (token == LanguageToken::CloseParenthesisToken);
 
-        if(_latestSmallTree == nullptr){
-            _latestSmallTree = new AuxillaryTree(token, value, line, column);
-            return;
+        if(isTokenAffectsOrderOfOperation){
+            processParenthesisOrOperator(token, value, isConditional);
+        }else if(isCloseParenthesis){
+            processCloseParenthesis(token, value);
+        }else if(token == LanguageToken::EndOfStatementToken){
+            processEndOfStatement();
+        }else if (_latestSmallTree == nullptr){
+            _latestSmallTree = createTree(token, value);
+        }else{
+            processToken(token, value);
         }
  
-
-        if(isOperator(value) || isKeyword(value)){
+        
+    }
+private:
+    void processToken(LanguageToken &token, std::string &value){
+        bool isOperatorOrKeyword = isOperator(value) || isKeyword(value);
+        if(isOperatorOrKeyword){
             _latestSmallTree = processOperator(token, value, _latestSmallTree);
             if(this->isDoubleOperator(_latestSmallTree->_value)){
                 _smallTrees.push_back(_latestSmallTree);
@@ -118,34 +119,33 @@ public:
         else{
             if(this->isDoubleOperator(_latestSmallTree->_value) || this->isKeyword(_latestSmallTree->_value)){
                 _smallTrees.push_back(_latestSmallTree);
-                _latestSmallTree = new AuxillaryTree(token, value, line, column);
+                _latestSmallTree = createTree(token, value);
             }else if(_smallTrees.size() > 1){
-                if(_latestSmallTree->_right== nullptr){
-                    _latestSmallTree->_right= new AuxillaryTree(token, value, line, column);
-                }else if(_latestSmallTree->_left == nullptr){
-                    _latestSmallTree->_left = new AuxillaryTree(token, value, line, column);
-                }
-                else{
-                    AuxillaryTree *tempTree = _latestSmallTree;
-                    while(tempTree->_right != nullptr){
-                        tempTree = tempTree->_right;
-                    }
-                    tempTree->_right = new AuxillaryTree(token, value, line, column);
+
+                if(addToAvailableBranchR(_latestSmallTree, token, value)){
+#ifdef DEBUG
+                    std::cout << "Added to a Branch" << std::endl;
+#endif
+                }else if(exhaustRightBranch(_latestSmallTree, token, value)){
+#ifdef DEBUG
+                    std::cout << "Exhausted Right Branch" << std::endl;
+#endif
                 }
             }else{
-                if(_latestSmallTree->_left == nullptr){
-                    _latestSmallTree->_left = new AuxillaryTree(token, value, line, column);
-                }else{
-                    AuxillaryTree *tempTree = _latestSmallTree;
-                    while(tempTree->_right != nullptr){
-                        tempTree = tempTree->_right;
-                    }
-                    tempTree->_right = new AuxillaryTree(token, value, line, column);
+                if(addToAvailableBranchL(_latestSmallTree, token, value)){
+#ifdef DEBUG
+                    std::cout << "Added to a Branch" << std::endl;
+#endif
+                }else if(exhaustRightBranch(_latestSmallTree, token, value)){
+#ifdef DEBUG
+                    std::cout << "Exhausted Left Branch" << std::endl;
+#endif
                 }
             }
             
         }
     }
+public: 
 
     void evaluateTree(){
         for(int i = 0; i < _totalityTree.size(); ++i){
@@ -231,18 +231,16 @@ private:
             tree->_left = newTree;
         }else{
             // Otherwise, check what kind of operation we are dealing with
-            if(this->isMultiplicationOrDivision(token) && (!this->isMultiplicationOrDivision(_latestSmallTree->_token))){
-            //if(token == LanguageToken::MultiplicationToken){
+            bool isTokenMultiplicationOrDivision = isMultiplicationOrDivision(token);
+            bool isTreeMultiplicationOrDivision = isMultiplicationOrDivision(tree->_token);
+            if(isTokenMultiplicationOrDivision && !isTreeMultiplicationOrDivision){
                 
                 // Go the left most side of the tree
                 AuxillaryTree* tempTreeParent = tree;
                 AuxillaryTree* tempTree = tree->_right;
                 if(tempTree == nullptr){
                     // Otherwise, we need make the new created tree the parent of the latest small tree
-                    AuxillaryTree* newTree = new AuxillaryTree(token, value, tree->_line, tree->_column);
-                    newTree->_left = tree;
-                    tree = newTree;
-                    return tree;
+                    return replaceParentToLeftOf(tree, token, value);
                 }
                 while(tempTree->_right != nullptr){
                     if(tempTree->_value == "*" || tempTree->_value == "/"){
@@ -250,19 +248,10 @@ private:
                     }
                     tempTree = tempTree->_left;
                 }
-
-                AuxillaryTree* newTree = new AuxillaryTree(token, value, tree->_line, tree->_column);
-                newTree->_left = tempTree;
-                tempTreeParent->_right= newTree;
-                return tempTreeParent;
+                return replaceParentToLeftOf(tempTreeParent, token, value);
             }else{
-                // Otherwise, we need make the new created tree the parent of the latest small tree
-                AuxillaryTree* newTree = new AuxillaryTree(token, value, tree->_line, tree->_column);
-                newTree->_left = tree;
-                tree = newTree;
-                return tree;
+                return replaceParentToLeftOf(tree, token, value);
             }
-
         }
         return tree;
     }
@@ -300,18 +289,14 @@ private:
                 if(this->isMultiplicationOrDivision(_latestSmallTree->_token)){
                     AuxillaryTree* rhsRoot = _latestSmallTree->_right;
                     _latestSmallTree->_right = tempTree;
-                    // Then it might have parenthesis
-                    if(_latestSmallTree->_left == nullptr){
-                        _latestSmallTree->_left = tempTree;
-                    }else if(_latestSmallTree->_right == nullptr){
-                        _latestSmallTree->_right = tempTree;
-                    }
-
-                    // Normal Processing
-                    else if(tempTree->_left == nullptr){
-                        tempTree->_left = rhsRoot;
-                    }else if(tempTree->_right == nullptr){
-                        tempTree->_right = rhsRoot;
+                    if(addToAvailableBranchL(_latestSmallTree, tempTree)){
+#ifdef DEBUG
+                        std::cout << "Added to a Branch" << std::endl;
+#endif
+                    }else if(addToAvailableBranchL(tempTree, rhsRoot)){
+#ifdef DEBUG
+                        std::cout << "Added to a Branch" << std::endl;
+#endif
                     }else{
                         if(rhsRoot != nullptr){
                             throw std::runtime_error("This Case in not yet Handled by the Language");
@@ -322,18 +307,15 @@ private:
                 }else{
                     AuxillaryTree* lhsRoot = _latestSmallTree->_left;
                     _latestSmallTree->_left = tempTree;
-                    // Then it might have parenthesis
-                    if(_latestSmallTree->_left == nullptr){
-                        _latestSmallTree->_left = tempTree;
-                    }else if(_latestSmallTree->_right == nullptr){
-                        _latestSmallTree->_right = tempTree;
-                    }
                     
-                    // Normal Processing
-                    else if(tempTree->_left == nullptr){
-                        tempTree->_left = lhsRoot;
-                    }else if(tempTree->_right == nullptr){
-                        tempTree->_right = lhsRoot;
+                    if(addToAvailableBranchL(_latestSmallTree, tempTree)){
+#ifdef DEBUG
+                        std::cout << "Added to a Branch" << std::endl;
+#endif
+                    }else if(addToAvailableBranchL(tempTree, lhsRoot)){
+#ifdef DEBUG
+                        std::cout << "Added to a Branch" << std::endl;
+#endif
                     }else{
                         if(lhsRoot != nullptr){
                             throw std::runtime_error("This Case in not yet Handled by the Language");
@@ -343,15 +325,12 @@ private:
                _smallTrees.pop_back();
                 continue;
             }
-
-            // Check if lhs or rhs is null to determine where to put the temp tree
-            if(tempTree->_right == nullptr){
-                tempTree->_right= _latestSmallTree;
-            }else if(tempTree->_left == nullptr){
-                tempTree->_left = _latestSmallTree;
-            }
-            else{
-
+                
+            if(addToAvailableBranchR(tempTree, _latestSmallTree)){
+#ifdef DEBUG
+                std::cout << "Added to a Branch" << std::endl;
+#endif
+            }else{
                 // If lhs is not null, then we need to do some processing to maintain the order of operations
                 // This bool is used to check if the temp tree has been changed.
                 // If it's not, then the algorithm found a valid rhs for the temp tree
@@ -385,21 +364,20 @@ private:
 
                 // If it's changed, then we need to set the rhs of the new temp tree to the temp tree
                 if(newTempTreeChanged){
-                    if(newTempTree->_right == nullptr){
-                        newTempTree->_right = tempTree;
-                    }
-                    else{
-                        newTempTree->_left = tempTree;
+                    if(addToAvailableBranchR(newTempTree, tempTree)){
+#ifdef DEBUG
+                        std::cout << "Added to a Branch" << std::endl;
+#endif
                     }
                     tempTree = _latestSmallTree;
                 }
 
                 // Otherwise we just need to set the rhs of the temp tree to the latest small tree
                 else{
-                    if(tempTree->_right == nullptr){
-                        tempTree->_right = _latestSmallTree;
-                    }else{
-                        tempTree->_left = _latestSmallTree;
+                    if(addToAvailableBranchR(tempTree, _latestSmallTree)){
+#ifdef DEBUG
+                        std::cout << "Added to a Branch" << std::endl;
+#endif
                     }
 
                 }
@@ -460,10 +438,13 @@ private:
             // Sometimes, left and right are populated if it's enclosed by parenthesis such as the mathematical expression: (a + b) + c
             // (a + b) will produce a complete small tree, which wouldn't have any nullptr values
             // In this case, we are sure that the _latestSmallTree has a nullptr value
-            if(_latestSmallTree->_left == nullptr){
-                _latestSmallTree->_left = lastSmallTree;
-            }else if(_latestSmallTree ->_right ==nullptr){
-                _latestSmallTree->_right = lastSmallTree;
+
+            if(addToAvailableBranchL(_latestSmallTree, lastSmallTree)){
+#ifdef DEBUG
+                std::cout << "Added to a Branch" << std::endl;
+#endif
+            }else{
+                throw std::runtime_error("This Case in not yet Handled by the Language");
             }
 
             // Push the updated latest small tree in the small trees
@@ -479,13 +460,6 @@ private:
         else{
             _smallTrees.push_back(lastSmallTree);
             lastSmallTree = _latestSmallTree;
-            // Find what it's and set it to the latest small tree
-            //if(lastSmallTree->_right ==nullptr){
-                //lastSmallTree->_right = _latestSmallTree;
-            //}
-            //else{
-                //lastSmallTree->_left = _latestSmallTree;
-            //}
         }
 
         // If it's a conditional statement, Additional processing is required
@@ -508,12 +482,12 @@ private:
                     break;
                 }
                 AuxillaryTree* backTree = _smallTrees.back();
-                if(backTree->_left == nullptr){
-                    backTree->_left = _latestSmallTree;
-                }else if(backTree->_right == nullptr){
-                    backTree->_right = _latestSmallTree;
+                if(addToAvailableBranchL(backTree, _latestSmallTree)){
+#ifdef DEBUG
+                    std::cout << "Added to a Branch" << std::endl;
+#endif
                 }else{
-                    std::cout << "UNDEFINED FOR NOW";
+                    throw std::runtime_error("This Case in not yet Handled by the Language");
                 }
                 _latestSmallTree = backTree;
                 _smallTrees.pop_back();
@@ -525,22 +499,21 @@ private:
             AuxillaryTree* newLastSmallTree = _smallTrees.back();
 
             // Check what is available, and append the if-token to it.
-            if(newLastSmallTree->_left == nullptr){
-                newLastSmallTree->_left = _latestSmallTree;
+
+            if(addToAvailableBranchL(newLastSmallTree, _latestSmallTree)){
+#ifdef DEBUG
+                std::cout << "Added to a Branch" << std::endl;
+#endif
+            }else if(exhaustRightBranch(newLastSmallTree, _latestSmallTree)){
+#ifdef DEBUG
+                std::cout << "Exhausted the Right Branch" << std::endl;
+#endif
             }else{
-
-                // There's a possibility that the lhs is not null, but the rhs is null on the outermost right, that's why we need to traverse the tree to find the outermost right
-                AuxillaryTree *tempTree = newLastSmallTree;
-                while(tempTree->_right != nullptr){
-                    tempTree = tempTree->_right;
-                }
-                tempTree->_right = _latestSmallTree;
+                throw std::runtime_error("This Case in not yet Handled by the Language");
             }
-
             // Update then pop the small tree
             lastSmallTree = newLastSmallTree;
             _smallTrees.pop_back();
-
         }
 
         // Update the latest small tree base on the processes tree and push it back to the small tree to maintain precedence
@@ -561,7 +534,7 @@ private:
         // If the latest small tree is null and it's a conditional conditional, create a new small tree
         if(_latestSmallTree == nullptr && isConditional){
             // This is done so that the conditional statement wouldn't merge without the next part of the condition is read
-            _smallTrees.push_back(new AuxillaryTree(token,value, _line, _column));
+            _smallTrees.push_back(createTree(token, value));
             return;
         }
             
@@ -584,7 +557,7 @@ private:
             if(_isConditional){
                 // Create a new small tree base on the current token and value.
                 // This is done to ensure the presedence of the conditional statement whilst making sure that the next part of the condition is with correct precedence
-                _latestSmallTree = new AuxillaryTree(token, value, _line, _column);
+                _latestSmallTree = createTree(token, value);
                 _smallTrees.push_back(_latestSmallTree);
                 _latestSmallTree = nullptr;
             }
@@ -665,25 +638,21 @@ private:
                 break;
             case LanguageToken::ColonToken:
                 // Consider only the left side of the tree
-                //this->expect(tree, &AST::isIdentifier, 1);
                 if(this->expect(tree, &AST::isIdentifier, &AST::isNull)){
                     isCorrect = true;
                 }
                 break;
             case LanguageToken::LeftShiftToken:
-                //this->expect(tree, &AST::isPrintable);
                 if(this->expect(tree, &AST::isKeyword ,&AST::isPrintable)){
                     isCorrect = true;
                 }
                 break;
             case LanguageToken::RightShiftToken:
-                //this->expect(tree, &AST::isInputable);
                 if(this->expect(tree, &AST::isKeyword ,&AST::isInputable)){
                     isCorrect = true;
                 }
                 break;
             case LanguageToken::IfToken:
-                //this->expect(tree, &AST::isConditional, &AST::isAStatement);
                 if(this->expect(tree, &AST::isConditional, &AST::isAStatement)){
                     isCorrect = true;
                 }
@@ -692,7 +661,6 @@ private:
             case LanguageToken::TypeDoubleToken:
             case LanguageToken::TypeStringToken:
                 // Consider only the left side of the tree
-                //this->expect(tree, &AST::declarable, 1);
                 if(this->expect(tree, &AST::declarable,1)){
                     isCorrect = true;
                 }
@@ -944,6 +912,91 @@ private:
     bool isMultiplicationOrDivision(LanguageToken token){
         return token == LanguageToken::MultiplicationToken || token == LanguageToken::DivisionToken;
     }
+
+// Quality of Life
+private:
+    AuxillaryTree* createTree(LanguageToken token, std::string value){
+        AuxillaryTree* tree = new AuxillaryTree(token, value, _line, _column);
+        tree->_token = token;
+        tree->_value = value;
+        return tree;
+    }
+    AuxillaryTree* createTree(LanguageToken token, std::string value, int line, int column){
+        AuxillaryTree* tree = new AuxillaryTree(token, value, line, column);
+        tree->_token = token;
+        tree->_value = value;
+        return tree;
+    }
+    bool addToAvailableBranchL(AuxillaryTree* &tree, LanguageToken &token, std::string &value){
+        if(tree->_left== nullptr){
+            tree->_left = createTree(token, value);
+            return true;
+        }else if(tree->_right == nullptr){
+            tree->_right = createTree(token, value);
+            return true;
+        }
+        return false;
+    }
+    bool addToAvailableBranchL(AuxillaryTree* &tree, AuxillaryTree* &rhs){
+        if(tree->_left== nullptr){
+            tree->_left = rhs;
+            return true;
+        }else if(tree->_right == nullptr){
+            tree->_right = rhs;
+            return true;
+        }
+        return false;
+    }
+
+    bool addToAvailableBranchR(AuxillaryTree* &tree, LanguageToken &token, std::string &value){
+        if(tree->_right == nullptr){
+            tree->_right = createTree(token, value);
+            return true;
+        }else if(tree->_left == nullptr){
+            tree->_left = createTree(token, value);
+            return true;
+        }
+        return false;
+    }
+    bool addToAvailableBranchR(AuxillaryTree* &tree, AuxillaryTree* &rhs){
+        if(tree->_right == nullptr){
+            tree->_right = rhs;
+            return true;
+        }else if(tree->_left == nullptr){
+            tree->_left = rhs;
+            return true;
+        }
+        return false;
+    }
+
+    bool exhaustRightBranch(AuxillaryTree* tree, LanguageToken &token, std::string &value){
+        while(tree->_right != nullptr){
+            tree = tree->_right;
+        }
+        if(tree->_right == nullptr){
+            tree->_right = createTree(token, value);
+            return true;
+        }
+        return false;
+    }
+    bool exhaustRightBranch(AuxillaryTree* tree, AuxillaryTree *rhs){
+        while(tree->_right != nullptr){
+            tree = tree->_right;
+        }
+        if(tree->_right == nullptr){
+            tree->_right = rhs;
+            return true;
+        }
+        return false;
+    }
+
+    AuxillaryTree* replaceParentToLeftOf(AuxillaryTree* tree, LanguageToken &token, std::string &value){
+        AuxillaryTree* newTree = createTree(token, value, tree->_line, tree->_column);
+        newTree->_left = tree;
+        tree = newTree;
+        return tree;
+    }
+
 };
 
 #endif // ABSTRACTSYNTAXTREE_h

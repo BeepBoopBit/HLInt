@@ -71,7 +71,8 @@ public:
     std::map<std::string , LanguageToken>& getConditionalOperator(){
         return _conditionalOperator;
     }
-
+    
+    // You know, I could probably just do it with a simple if else statement by character comparison but I did it this way, so yeah....
     std::map<char, LanguageToken>& getNumberAlphabet(){
         return _numberAlphabet;
     }

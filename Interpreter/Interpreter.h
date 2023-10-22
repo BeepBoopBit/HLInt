@@ -20,22 +20,29 @@ public:
         return instance;
     }
 private:
-    SymbolTable *_symbolTable = &SymbolTable::getInstance();
-    LanguageDictionary* _languageDictionary = &LanguageDictionary::getInstance();
+    SymbolTable*            _symbolTable            = &SymbolTable::getInstance();          // The symbol table
+    LanguageDictionary*     _languageDictionary     = &LanguageDictionary::getInstance();   // The language dictionary
 
     // Temporary Support for One Way If
+    // Will be removed after the implementation of scopes
     bool _inIfScope = false;
+
 public:
     void interpret(AuxillaryTree* &tree, bool isInterpretAll = false){
+
+        // If the tree is nullptr, then return
         if(tree == nullptr){
             return;
         }
+
+        // If we want to interpret all subtrees, then we will interpret the left and right subtree
         if(isInterpretAll){
             interpret(tree->_left, true);
             interpret(tree->_right, true);
         }
 
-        bool isCorrect = false;
+        // Otherwise, we will interpret the current subtree
+        bool isCorrect = false;                                                             // Signifies if the tree is correct
         switch(tree->_token){
             case LanguageToken::CharacterToken:
             case LanguageToken::IdentifierToken:
@@ -63,15 +70,11 @@ public:
                 handleAssignment(tree);
                 break;
             case LanguageToken::LeftShiftToken:
-                {
-                    handleOutput(tree);
-                    break;
-                }
+                handleOutput(tree);
+                break;
             case LanguageToken::RightShiftToken:
-                {
-                    handleInput(tree);
-                    break;
-                }
+                handleInput(tree);
+                break;
             case LanguageToken::LessThanToken:
             case LanguageToken::GreaterThanToken:
             case LanguageToken::EqualityToken:
@@ -86,26 +89,8 @@ public:
             case LanguageToken::TypeStringToken:
                 handleDeclaration(tree);
                 break;
-
-            // Non-Existent or Non-Essential Tokens
-            case LanguageToken::RootNode:
-#ifdef DEBUG
-                std::cout << "[DEBUG] Reach Root Node" << std::endl;
-#endif
-                break;
-            case LanguageToken::OpenParenthesisToken:
-                throw std::runtime_error("Open Parenthesis should not be in the Tree. Please Check the Lexer");
-                break;
-            case LanguageToken::CloseParenthesisToken:
-                throw std::runtime_error("Close Parenthesis should not be in the Tree. Please Check the Lexer");
-                break;
-            case LanguageToken::QuoteToken:
-                throw std::runtime_error("Quote Token Should not be in the Tree. Please Check the Lexer");
-                break;
-            case LanguageToken::InvalidToken:
-                throw std::runtime_error("Invalid Token");
-                break;
             default:
+                throw std::runtime_error("Token: " + tree->_value + ". Either the token is not implemented or there's a problem with the AST");
                 break;
         }
     }
@@ -137,61 +122,27 @@ private:
 
         AuxillaryTree* lhs = tree->_left;
         AuxillaryTree* rhs = tree->_right;
+
         
         if(lhs->_token == LanguageToken::StringToken){
             if(rhs->_token != LanguageToken::StringToken){
                 throw std::runtime_error("Cannot compare string with non-string");
             }
-            // Then it is a string comparison
-            std::string lhsValue = lhs->_value;
-            std::string rhsValue = rhs->_value;
-            bool isTrue = false;
-            switch(tree->_token){
-                case LanguageToken::LessThanToken:
-                    isTrue = lhsValue < rhsValue;
-                    break;
-                case LanguageToken::GreaterThanToken:
-                    isTrue = lhsValue > rhsValue;
-                    break;
-                case LanguageToken::EqualityToken:
-                    isTrue = lhsValue == rhsValue;
-                    break;
-                case LanguageToken::NotEqualToken:
-                    isTrue = lhsValue != rhsValue;
-                    break;
-                default:
-                    break;
-            }
-            return isTrue;
+
+            return evaluateComparison<std::string>(tree->_token, lhs->_value, rhs->_value);
         }
 
         // Then it's an error
         if(rhs->_token == LanguageToken::StringToken){
             throw std::runtime_error("Cannot compare string with non-string");
         }
-
+        
+        // Interpret LHS and RHS to get the smallest unit of value
         interpret(lhs, true);
         interpret(rhs, true);
         double lhsValue = evaluateMathematicalExpression(lhs);
         double rhsValue = evaluateMathematicalExpression(rhs);
-        bool isTrue = false;
-        switch(tree->_token){
-            case LanguageToken::LessThanToken:
-                isTrue = lhsValue < rhsValue;
-                break;
-            case LanguageToken::GreaterThanToken:
-                isTrue = lhsValue > rhsValue;
-                break;
-            case LanguageToken::EqualityToken:
-                isTrue = lhsValue == rhsValue;
-                break;
-            case LanguageToken::NotEqualToken:
-                isTrue = lhsValue != rhsValue;
-                break;
-            default:
-                break;
-        }
-        return isTrue;
+        return evaluateComparison<double>(tree->_token, lhsValue, rhsValue);
     }
     void handleOutput(AuxillaryTree* tree){
         // Tree Token will always be <<
@@ -300,111 +251,65 @@ private:
             variableDouble->setValue(realValue);
             this->_symbolTable->set(lhs->_value, variableDouble);
         }else if(variable->getType() == "string"){
-            // Not Handled Correctly
             ObjectTypeString* variableString = _symbolTable->parseToString(variable);
             variableString->setValue(std::to_string(realValue));
             this->_symbolTable->set(lhs->_value, variableString);
         }
     }
-
+    
     double evaluateMathematicalExpression(AuxillaryTree* &tree){
         // Tree token will always be a mathetical expression
         interpret(tree, true);
-        std::string expression = tree->_value;
-        
-        char c = ' ';
-        std::string token = "";
-        double evaluatedValue = 0.0;
-        
+        std::string     expression      = tree->_value;         // The expression to be evaluated
+        char            c               = ' ';                  // The current character being evaluated
+        std::string     token           = "";                   // The current token being evaluated
+        double          evaluatedValue  = 0.0;                  // The value of the expression
+        bool            nextIsASign     = true;                 // Whether the next token is a sign
+        int             signModifier    = 1;                    // The sign modifier
+        bool            isString        = false;                // Whether the expression is a string
+
         // 0 = Addition
         // 1 = Subtraction
         // 2 = Multiplication
         // 3 = Division
         int typeOfOperation = 0;
-        bool nextIsASign = true;
-        int signModifier = 1;
         for(int i = 0; i < expression.length(); ++i){
             c = expression[i];
             token += c;
             if(token == "\""){
-                throw std::runtime_error("Cannot perform mathematical operations on strings");
-            }
-            if(this->isDigit(token)){
-                char tempC = c;
-                tempC = expression[++i];
-                while(this->isDigit(tempC) || tempC  == '.'){
-                    tempC = expression[i];
-                    token += tempC;
-                    tempC = expression[++i];
-                }
-                if(typeOfOperation == 0){
-                    evaluatedValue += std::stod(token)*signModifier;
-                }else if(typeOfOperation == 1){
-                    evaluatedValue -= std::stod(token)*signModifier;
-                }else if(typeOfOperation == 2){
-                    evaluatedValue *= std::stod(token)*signModifier;
-                }else if(typeOfOperation == 3){
-                    evaluatedValue /= std::stod(token)*signModifier;
-                }
-                --i;
+                isString = true;
+            }else if(this->isDigit(token)){
+                token = getValueUntilNot(expression, i, &Interpreter::isDigit, true);
+                evaluateValue(evaluatedValue, std::stod(token)*signModifier, typeOfOperation);
             }
             else if(this->isIdentifier(token)){
-                char tempC = c;
-                tempC = expression[++i];
-                while(this->isIdentifier(tempC)){
-                    tempC = expression[i];
-                    token += tempC;
-                    tempC = expression[++i];
-                }
-                --i;
+                token = getValueUntilNot(expression, i, &Interpreter::isIdentifier);
                 auto variable = _symbolTable->get(token);
                 if(variable->getType() == "integer"){
                     ObjectTypeInt* variableInt = _symbolTable->parseToInt(variable);
-                    if(typeOfOperation == 0){
-                        evaluatedValue += variableInt->getValue()*signModifier;
-                    }else if(typeOfOperation == 1){
-                        evaluatedValue -= variableInt->getValue()*signModifier;
-                    }else if(typeOfOperation == 2){
-                        evaluatedValue *= variableInt->getValue()*signModifier;
-                    }else if(typeOfOperation == 3){
-                        evaluatedValue /= variableInt->getValue()*signModifier;
-                    }
+                    evaluateValue(evaluatedValue, (double)variableInt->getValue()*signModifier, typeOfOperation);
                     nextIsASign = false;
                 }else if(variable->getType() == "double"){
                     ObjectTypeDouble* variableDouble = _symbolTable->parseToDouble(variable);
-                    if(typeOfOperation == 0){
-                        evaluatedValue += variableDouble->getValue()*signModifier;
-                    }else if(typeOfOperation == 1){
-                        evaluatedValue -= variableDouble->getValue()*signModifier;
-                    }else if(typeOfOperation == 2){
-                        evaluatedValue *= variableDouble->getValue()*signModifier;
-                    }else if(typeOfOperation == 3){
-                        evaluatedValue /= variableDouble->getValue()*signModifier;
-                    }
+                    evaluateValue(evaluatedValue, variableDouble->getValue()*signModifier, typeOfOperation);
                     nextIsASign = false;
                 }
             }else if(token == "+"){
-                if(nextIsASign){
-                    signModifier = 1;
-                }else{
-                    typeOfOperation = 0;
-                }
+                if(nextIsASign) { signModifier = 1; }
+                else            { typeOfOperation = 0; }
                 nextIsASign = true;
             }else if(token == "-"){
-                if(nextIsASign){
-                    signModifier = -1;
-                }else{
-                    typeOfOperation = 1;
-                }
-                nextIsASign = true;
+                if(nextIsASign) { signModifier = -1; }
+                else            { typeOfOperation = 1; }
+                nextIsASign     = true;
             }else if(token == "*"){
                 typeOfOperation = 2;
-                signModifier = 1;
+                signModifier    = 1;
                 nextIsASign = true;
             }else if(token == "/"){
                 typeOfOperation = 3;
-                signModifier = 1;
-                nextIsASign = true;
+                signModifier    = 1;
+                nextIsASign     = true;
             }
             token ="";
         }
@@ -456,6 +361,55 @@ private:
         }
         return getTreeValues(tree->_left) + tree->_value + getTreeValues(tree->_right);
     }
+    std::string getValueUntilNot(std::string &expression, int &index, bool (Interpreter::*func)(char), bool allowDecimal = false){
+        std::string token = "";
+        char c = expression[index];
+        while((this->*func)(c) || (allowDecimal && c == '.')){
+            token += c;
+            c = expression[++index];
+        }
+        --index;
+        return token;
+    }
+    template<typename T>
+    bool evaluateComparison(LanguageToken &token, T lhsValue, T rhsValue){
+        switch(token){
+            case LanguageToken::LessThanToken:
+                return lhsValue < rhsValue;
+            case LanguageToken::GreaterThanToken:
+                return lhsValue > rhsValue;
+            case LanguageToken::EqualityToken:
+                return lhsValue == rhsValue;
+            case LanguageToken::NotEqualToken:
+                return lhsValue != rhsValue;
+            default:
+                break;
+        }
+        throw std::runtime_error("Invalid Comparison");
+        return false;
+    }
+    
+    template<typename T>
+    void evaluateValue(T &total, T rhsValue, int typeOfOperation){
+        switch(typeOfOperation){
+            case 0:
+                total += rhsValue;
+                break;
+            case 1:
+                total -= rhsValue;
+                break;
+            case 2:
+                total *= rhsValue;
+                break;
+            case 3:
+                total /= rhsValue;
+                break;
+            default:
+                break;
+        }
+    }
+
+    
 };
 
 #endif // INTERPRETER_H
