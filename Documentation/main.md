@@ -323,7 +323,7 @@ Processes input code, organizes it into a hierarchical tree structure, and check
 #### Constructors
 
 * `AST()`
-    * Empty constructor defined for the AST class.
+    * Opens a file with the filename specified by _filename.
 
 * `AST(AST const&) = delete`
     * Deletes the copy constructor to prevent the creation of multiple copies of the class.
@@ -345,7 +345,7 @@ Processes input code, organizes it into a hierarchical tree structure, and check
     * Manages the insertion of language tokens and their values into the abstract syntax tree. To ensure proper parsing and ordering of operations.
 
 * `void evaluateTree()`
-    * Iterates through a collection of statements or expressions in AST and evaluates each of them.
+    * Iterates through a collection of statements or expressions in AST and evaluates each of them. Additionally, it closes the file at the end of the evaluation process.
 
 * `void print()`
     * Displays the structure of the entire AST. This includes individual tree within it.
@@ -372,7 +372,7 @@ Processes input code, organizes it into a hierarchical tree structure, and check
     * Handles the processing of parentheses and conditional statements in the AST. Maintains their precedence and the correct order of operations.
 
 * `bool evaluateTree(AuxillaryTree*& tree)`
-    * Evaluates a binary tree structure. Checks that each node in the tree meets certain evaluation criteria. Returns true if it passes, and false if it's the latter.
+    * Evaluates a binary tree structure. Checks that each node in the tree meets certain evaluation criteria. Returns true if it passes, and false if it's the latter. Writes information about the tree nodes to a file.
 
 * `bool processEvaluation(AuxillaryTree* &tree)`
     * Verifies whether the node meets the expected criteria for its token type. Flags any errors encountered in the process.
