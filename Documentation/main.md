@@ -83,13 +83,13 @@ This handles the reading of characters, identifies and categorizes tokens and th
 
 #### Constructor
 
-* `LexicalAnalyzer(std::string filename)`
+* `LexicalAnalyzer(std::string filename = "test.txt")`
     * This initializes the object and setting various variables. This includes the preparation for tokenizing and analyzing the content of a file. 
 
 #### Destructor
 
 * `~LexicalAnalyzer()`
-    * Ensures that open files are properly closed to prevent resource leaks and saves symbol information before the LexicalAnalyzer instance is destroyed.
+    * Ensures that open files are properly closed to prevent resource leaks before the LexicalAnalyzer instance is destroyed.
 
 #### Methods
 
