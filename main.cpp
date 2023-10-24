@@ -1,7 +1,5 @@
 #include "HLint.h"
 
-//#define DEBUG
-
 int main(int argc, char** argv){
     
     // Ensure that the user has provided the file name

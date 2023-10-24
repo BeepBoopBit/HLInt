@@ -1,0 +1,9 @@
+
+#########################ERROR BREAKDOWN#########################
+[ERROR] No semicolon at the end of the fileat line: 24 column: 8
+[ERROR] <<at line: 6 column: 5
+[ERROR] xat line: 6 column: 6
+[ERROR] :=at line: 14 column: 2
+[ERROR] <<at line: 14 column: 3
+[ERROR] outputat line: 14 column: 3
+##################################################################

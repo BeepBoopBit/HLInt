@@ -29,6 +29,8 @@ private:
         // Ensure that the error will be saved and closed
         if(_hasError){
             saveError();
+        }else{
+            _errorLog << "NO ERROR(S)FOUND" << std::endl;
         }
         _errorLog.close();
     }
@@ -66,7 +68,6 @@ public:
     bool displayError(){
         if(_hasError){
             errorBreakdown();
-            saveError();
         }
         return _hasError;
     }

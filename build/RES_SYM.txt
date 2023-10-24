@@ -56,8 +56,8 @@ NumberDoubleToken: 4.123
 NumberIntegerToken: 18
 LeftShiftToken: <<
 OutputToken: output
-IdentifierToken: x
 AssignmentToken: :=
+IdentifierToken: x
 IdentifierToken: x
 NumberDoubleToken: -4.1823
 LeftShiftToken: <<
@@ -91,6 +91,8 @@ ColonToken: :
 IdentifierToken: xyz
 AssignmentToken: :=
 IdentifierToken: xyz
+LeftShiftToken: <<
+OutputToken: output
 SubtractionToken: -
 AdditionToken: +
 SubtractionToken: -
@@ -155,8 +157,3 @@ IdentifierToken: z
 RightShiftToken: >>
 InputToken: input
 IdentifierToken: z
-LeftShiftToken: <<
-OutputToken: output
-AdditionToken: +
-IdentifierToken: z
-IdentifierToken: xy
