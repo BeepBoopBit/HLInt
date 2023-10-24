@@ -1,0 +1,7 @@
+x: double;
+y: double;
+
+x := 20.23;
+y := x * 5.12;
+
+output << x + ((y+3) + 4) - 10;

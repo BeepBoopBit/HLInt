@@ -1,0 +1,7 @@
+x: double;
+y: integer;
+x := 1.5;
+y := 2;
+
+if ( (x+y)/2*2 == 3.5)
+    output << (x + y)/2*2;

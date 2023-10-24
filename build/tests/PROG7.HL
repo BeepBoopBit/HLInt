@@ -1,0 +1,26 @@
+x:double;
+x := 3 * (5 + 2) * 3 + (4 - 8) * 6;
+if ((x-5)+8*3==8*3+(39-5))
+    output << "yes";
+output << x;
+output << x + ((x+3) + 4) - 10;
+x := 4.123 + 18;
+output << x;
+x := -4.1823;
+output << x;
+x:= (x+1)-((3+4) - 5);
+output << x;
+x := 5;
+output << x;
+output << "hello";
+xyz:double;
+x := 1 * 2 + 3;
+y: double;
+y := x + 2;
+if (x > y) 
+    output << z;
+output<< x + y + 5;
+output << "watermelon";
+z: string;
+input >> z;
+output << z;
